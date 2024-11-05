@@ -1,0 +1,135 @@
+<project name="SuperSCAD" default="build" basedir=".">
+    <taskdef name="readSemanticVersion" classname="vendor.setbased.phing-extensions.src.Task.ReadSemanticVersionTask"/>
+    <property name="BUILD_DIR" value="./build"/>
+
+    <!-- Run composer update and executes various other updates -->
+    <target name="composer-update">
+        <exec executable="composer" checkreturn="true" passthru="true">
+            <arg value="update"/>
+        </exec>
+    </target>
+
+    <!-- Install virtual environment -->
+    <target name="venv">
+        <exec executable="python3" checkreturn="true" passthru="true">
+            <arg value="-m"/>
+            <arg value="venv"/>
+            <arg value=".venv"/>
+        </exec>
+        <exec executable="./.venv/bin/python" checkreturn="true" passthru="true">
+            <arg value="-m"/>
+            <arg value="pip"/>
+            <arg value="install"/>
+            <arg value="--upgrade"/>
+            <arg value="pip"/>
+        </exec>
+        <exec executable="./.venv/bin/python" checkreturn="true" passthru="true">
+            <arg value="-m"/>
+            <arg value="pip"/>
+            <arg value="install"/>
+            <arg value="--upgrade"/>
+            <arg value="poetry"/>
+        </exec>
+        <exec executable="./.venv/bin/poetry" passthru="true" checkreturn="true">
+            <arg value="--ansi"/>
+            <arg value="lock"/>
+        </exec>
+        <exec executable="./.venv/bin/poetry" passthru="true" checkreturn="true">
+            <arg value="--ansi"/>
+            <arg value="install"/>
+            <arg value="--no-root"/>
+        </exec>
+        <exec executable="./.venv/bin/poetry" passthru="true" checkreturn="true">
+            <arg value="--ansi"/>
+            <arg value="show"/>
+            <arg value="--outdated"/>
+        </exec>
+    </target>
+
+    <!-- Creates a new version/release. -->
+    <!-- @todo replace semantic version with pep-396 -->
+    <target name="version">
+        <readSemanticVersion file=".version"
+                             versionProperty="VERSION"
+                             haltOnError="true"/>
+        <reflexive>
+            <fileset dir=".">
+                <include name="pyproject.toml"/>
+            </fileset>
+            <filterchain>
+                <replaceregexp>
+                    <regexp pattern="version = .*" replace="version = &quot;${VERSION}&quot;"/>
+                </replaceregexp>
+            </filterchain>
+        </reflexive>
+        <exec executable="git" checkreturn="true" passthru="true">
+            <arg value="commit"/>
+            <arg value="-a"/>
+            <arg value="-m"/>
+            <arg value="Release: ${VERSION}"/>
+        </exec>
+        <exec executable="git" checkreturn="true" passthru="true">
+            <arg value="push"/>
+        </exec>
+        <exec executable="git" checkreturn="true" passthru="true">
+            <arg value="tag"/>
+            <arg value="${VERSION}"/>
+        </exec>
+        <exec executable="git" checkreturn="true" passthru="true">
+            <arg value="push"/>
+            <arg value="origin"/>
+            <arg value="${VERSION}"/>
+        </exec>
+    </target>
+
+    <!-- Creates a new distribution using pyproject.toml -->
+    <target name="dist">
+        <exec command="./.venv/bin/poetry build" passthru="true" checkreturn="true"/>
+    </target>
+
+    <!-- Uploads a distribution to PyPI -->
+    <target name="upload">
+        <exec command="./.venv/bin/poetry publish" passthru="true" checkreturn="true"/>
+    </target>
+
+    <!-- All steps for releasing a new version -->
+    <target name="release" depends="version,dist,upload"/>
+
+    <!-- Runs all unit tests-->
+    <target name="unit">
+        <exec executable="./.venv/bin/python" checkreturn="true" passthru="true">
+            <arg value="-m"/>
+            <arg value="coverage"/>
+            <arg value="run"/>
+            <arg value="-m"/>
+            <arg value="unittest"/>
+            <arg value="discover"/>
+            <arg value="-s"/>
+            <arg value="test"/>
+            <arg value="-p"/>
+            <arg value="\*Test.py"/>
+        </exec>
+        <exec executable="./.venv/bin/python" checkreturn="true" passthru="true">
+            <arg value="-m"/>
+            <arg value="coverage"/>
+            <arg value="html"/>
+        </exec>
+        <delete>
+            <fileset dir="test">
+                <include name="**/*.actual.scad"/>
+            </fileset>
+        </delete>
+    </target>
+
+    <!-- Generates the documentation -->
+    <target name="docs">
+        <exec command="sphinx-apidoc -o api --force --doc-project API --no-toc ../super_scad" dir="docs"
+              passthru="true" checkreturn="true"/>
+        <exec command="make html" dir="docs" passthru="true" checkreturn="true"/>
+    </target>
+
+    <!-- Default target -->
+    <target name="build">
+        <echo msg="And Now for Something Completely Different"/>
+    </target>
+</project>
