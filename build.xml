@@ -1,5 +1,5 @@
 <project name="SuperSCAD" default="build" basedir=".">
-    <taskdef name="readSemanticVersion" classname="vendor.setbased.phing-extensions.src.Task.ReadSemanticVersionTask"/>
+    <taskdef name="readSemanticVersion" classname="vendor/setbased/phing-extensions/src/ReadSemanticVersionTask"/>
     <property name="BUILD_DIR" value="./build"/>
 
     <!-- Run composer update and executes various other updates -->

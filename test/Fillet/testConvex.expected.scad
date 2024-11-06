@@ -13,15 +13,12 @@ difference()
             polygon(points = [[0.0, 10.0], [-20.0, 0.0], [0.0, -10.0], [20.0, 0.0]]);
             translate(v = [0.0, 10.0])
             {
-               rotate(a = 0.0)
+               difference()
                {
-                  difference()
+                  polygon(points = [[0.0, 0.01], [2.2461, -1.118], [-2.2461, -1.118]], convexity = 2);
+                  translate(v = [0.0, -5.5902])
                   {
-                     polygon(points = [[0.0, 0.01], [2.2461, -1.118], [-2.2461, -1.118]], convexity = 2);
-                     translate(v = [0.0, -5.5902])
-                     {
-                        circle(d = 10.0, $fn = 316);
-                     }
+                     circle(d = 10.0, $fn = 316);
                   }
                }
             }

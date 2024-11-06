@@ -6,6 +6,7 @@ from super_scad.d2.Circle import Circle
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
 from super_scad.scad.ScadWidget import ScadWidget
+from super_scad.transformation.Position2D import Position2D
 from super_scad.transformation.Rotate2D import Rotate2D
 from super_scad.transformation.Translate2D import Translate2D
 from super_scad.type import Vector2
@@ -90,13 +91,14 @@ class Fillet(SmoothProfile):
         x = radius * math.cos(alpha) + context.eps
         y = radius * math.cos(alpha) ** 2 / math.sin(alpha)
         polygon = Polygon(points=[Vector2(0.0, context.eps), Vector2(x, -y), Vector2(-x, -y)], convexity=2)
-        circle = Circle(radius=radius, position=Vector2(0.0, -radius / math.sin(alpha)), fn4n=True)
-        fillet = Difference(children=[polygon, circle])
-        fillet = Translate2D(vector=self.position,
-                             child=Rotate2D(angle=self.normal_angle + rotation,
-                                            child=fillet))
+        circle = Circle(radius=radius, fn4n=True)
+        fillet = Difference(children=[polygon,
+                                      Translate2D(vector=Vector2(0.0, -radius / math.sin(alpha)),
+                                                  child=circle)])
 
-        return fillet
+        return Position2D(angle=self.normal_angle + rotation,
+                          vector=self.position,
+                          child=fillet)
 
     # ------------------------------------------------------------------------------------------------------------------
     def _build_fillet_neg(self) -> ScadWidget:
@@ -105,11 +107,11 @@ class Fillet(SmoothProfile):
         """
         inner_angle = self.inner_angle
 
-        return CircleSector(start_angle=self.normal_angle + 0.5 * inner_angle,
-                            end_angle=self.normal_angle - 0.5 * inner_angle,
-                            radius=-self.radius,
-                            position=self.position,
-                            extend_legs_by_eps=True,
-                            fn4n=True)
+        return Translate2D(vector=self.position,
+                           child=CircleSector(start_angle=self.normal_angle + 0.5 * inner_angle,
+                                              end_angle=self.normal_angle - 0.5 * inner_angle,
+                                              radius=-self.radius,
+                                              extend_legs_by_eps=True,
+                                              fn4n=True))
 
 # ----------------------------------------------------------------------------------------------------------------------
