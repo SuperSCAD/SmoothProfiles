@@ -1,3 +1,6 @@
+import math
+
+from super_scad.boolean.Empty import Empty
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
 from super_scad.scad.Scad import Scad
@@ -12,6 +15,60 @@ class FilletTest(ScadTestCase):
     """
     Testcases for chamfers.
     """
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def test_skew_length(self):
+        """
+        Test chamfer given the length of the skew side.
+        """
+        # Sharp angle.
+        profile = Chamfer(skew_length=5.0,
+                          inner_angle=90.0,
+                          normal_angle=0.0,
+                          position=Vector2.origin, child=Empty())
+
+        self.assertAlmostEqual(5.0, profile.skew_length)
+        self.assertAlmostEqual(2.5, profile.skew_height)
+        self.assertAlmostEqual(2.5 * math.sqrt(2.0), profile.size1)
+        self.assertAlmostEqual(2.5 * math.sqrt(2.0), profile.size2)
+
+        # Oblige angle.
+        profile = Chamfer(skew_length=5.0,
+                          inner_angle=90.0,
+                          normal_angle=0.0,
+                          position=Vector2.origin, child=Empty())
+
+        self.assertAlmostEqual(5.0, profile.skew_length)
+        self.assertAlmostEqual(2.5, profile.skew_height)
+        self.assertAlmostEqual(2.5 * math.sqrt(2.0), profile.size1)
+        self.assertAlmostEqual(2.5 * math.sqrt(2.0), profile.size2)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def test_skew_height(self):
+        """
+        Test chamfer given the height of the skew side.
+        """
+        # Sharp angle.
+        profile = Chamfer(skew_height=5.0,
+                          inner_angle=90.0,
+                          normal_angle=0.0,
+                          position=Vector2.origin, child=Empty())
+
+        self.assertAlmostEqual(10.0, profile.skew_length)
+        self.assertAlmostEqual(5.0, profile.skew_height)
+        self.assertAlmostEqual(5.0 * math.sqrt(2.0), profile.size1)
+        self.assertAlmostEqual(5.0 * math.sqrt(2.0), profile.size2)
+
+        # Oblige angle.
+        profile = Chamfer(skew_height=5.0,
+                          inner_angle=90.0,
+                          normal_angle=0.0,
+                          position=Vector2.origin, child=Empty())
+
+        self.assertAlmostEqual(10.0, profile.skew_length)
+        self.assertAlmostEqual(5.0, profile.skew_height)
+        self.assertAlmostEqual(5.0 * math.sqrt(2.0), profile.size1)
+        self.assertAlmostEqual(5.0 * math.sqrt(2.0), profile.size2)
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_convex(self) -> None:

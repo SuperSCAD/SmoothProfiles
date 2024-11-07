@@ -3,6 +3,7 @@ import math
 from super_scad.boolean.Difference import Difference
 from super_scad.boolean.Union import Union
 from super_scad.d2.Polygon import Polygon
+from super_scad.scad.ArgumentAdmission import ArgumentAdmission
 from super_scad.scad.Context import Context
 from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.type import Vector2
@@ -18,8 +19,8 @@ class Chamfer(SmoothProfile):
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self,
                  *,
-                 length: float | None = None,
-                 height: float | None = None,
+                 skew_length: float | None = None,
+                 skew_height: float | None = None,
                  inner_angle: float,
                  normal_angle: float,
                  position: Vector2,
@@ -27,8 +28,8 @@ class Chamfer(SmoothProfile):
         """
         Object constructor.
 
-        :param length: The length of the chamfer.
-        :param height: The height of the chamfer.
+        :param skew_length: The length of the skew side of the chamfer.
+        :param skew_height: The skew_height of the chamfer, measured perpendicular for the skew size to the node.
         :param inner_angle: Inner angle between the vertices.
         :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
                              the two vertices and with origin at the node.
@@ -36,14 +37,24 @@ class Chamfer(SmoothProfile):
         """
         SmoothProfile.__init__(self, args=locals(), child=child)
 
+        self._validate_arguments()
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def _validate_arguments(self) -> None:
+        """
+        Validates the arguments supplied to the constructor of this profile.
+        """
+        admission = ArgumentAdmission(self._args)
+        admission.validate_exclusive({'skew_length'}, {'skew_height'})
+
     # ------------------------------------------------------------------------------------------------------------------
     @property
-    def height(self) -> float:
+    def skew_height(self) -> float:
         """
-        The height of the chamfer.
+        The skew_height of the chamfer, measured perpendicular for the skew size to the node.
         """
-        if 'height' in self._args:
-            return self.uc(self._args['height'])
+        if 'skew_height' in self._args:
+            return self.uc(self._args['skew_height'])
 
         inner_angle = self.inner_angle
         if inner_angle > 180:
@@ -51,20 +62,38 @@ class Chamfer(SmoothProfile):
 
         angle = Angle.normalize(inner_angle / 2.0, 180.0)
 
-        return 0.5 * self.length / math.tan(math.radians(angle))
+        return 0.5 * self.skew_length / math.tan(math.radians(angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     @property
-    def length(self) -> float:
+    def skew_length(self) -> float:
         """
-        The height of the chamfer.
+        The length of the skew side of the chamfer.
         """
-        if 'length' in self._args:
-            return self.uc(self._args['length'])
+        if 'skew_length' in self._args:
+            return self.uc(self._args['skew_length'])
 
         angle = Angle.normalize(self.inner_angle, 180.0)
 
-        return 2.0 * self.height * math.tan(math.radians(0.5 * angle))
+        return 2.0 * self.skew_height * math.tan(math.radians(0.5 * angle))
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def size1(self) -> float:
+        """
+        Returns the size of the profile on the first vertex at the node.
+        """
+        alpha = Angle.normalize(self.inner_angle, 180.0) / 2.0
+
+        return self.skew_height / math.sin(math.radians(alpha))
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def size2(self) -> float:
+        """
+        Returns the size of the profile on the second vertex at the node.
+        """
+        return self.size1
 
     # ------------------------------------------------------------------------------------------------------------------
     def build(self, context: Context) -> ScadWidget:
@@ -102,9 +131,9 @@ class Chamfer(SmoothProfile):
         """
         p1 = self.position
         p2 = self.position + \
-             Vector2.from_polar_coordinates(self.height, normal_angle) + \
-             Vector2.from_polar_coordinates(0.5 * self.length, normal_angle + 90.0)
-        p3 = p2 + Vector2.from_polar_coordinates(self.length, normal_angle - 90.0)
+             Vector2.from_polar_coordinates(self.skew_height, normal_angle) + \
+             Vector2.from_polar_coordinates(0.5 * self.skew_length, normal_angle + 90.0)
+        p3 = p2 + Vector2.from_polar_coordinates(self.skew_length, normal_angle - 90.0)
 
         eps0 = Vector2.from_polar_coordinates(context.eps, normal_angle + 180.0)
         eps1 = Vector2.from_polar_coordinates(context.eps, normal_angle + alpha + 90.0)

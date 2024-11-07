@@ -1,3 +1,4 @@
+from super_scad.boolean.Empty import Empty
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
 from super_scad.scad.Scad import Scad
@@ -12,6 +13,33 @@ class FilletTest(ScadTestCase):
     """
     Testcases for fillet.
     """
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def test_sizes(self):
+        """
+        Test the size of a fillet.
+        """
+        # Sharp angle.
+        profile = Fillet(radius=5.0,
+                         inner_angle=45.0,
+                         normal_angle=0.0,
+                         position=Vector2.origin,
+                         child=Empty())
+
+        self.assertAlmostEqual(5.0, profile.radius)
+        self.assertAlmostEqual(5.0, profile.size1)
+        self.assertAlmostEqual(5.0, profile.size2)
+
+        # Oblique angle.
+        profile = Fillet(radius=5.0,
+                         inner_angle=135.0,
+                         normal_angle=0.0,
+                         position=Vector2.origin,
+                         child=Empty())
+
+        self.assertAlmostEqual(5.0, profile.radius)
+        self.assertAlmostEqual(5.0, profile.size1)
+        self.assertAlmostEqual(5.0, profile.size2)
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_convex(self) -> None:

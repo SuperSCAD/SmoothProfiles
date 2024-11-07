@@ -14,20 +14,20 @@ class ChamferFactory(SmoothProfileFactory):
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self,
                  *,
-                 length: float | None = None,
-                 height: float | None = None):
+                 skew_length: float | None = None,
+                 skew_height: float | None = None):
         """
         Object constructor.
 
-        :param length: The length of the chamfer.
-        :param height: The height of the chamfer.
+        :param skew_length: The length of the skew side of the chamfer.
+        :param skew_height: The skew_height of the chamfer, measured perpendicular for the skew size to the node.
         """
-        self._length: float = length
+        self._skew_length: float = skew_length
         """
         The length of the chamfer.
         """
 
-        self._height: float = height
+        self._skew_height: float = skew_height
         """
         The height of the chamfer.
         """
@@ -48,8 +48,8 @@ class ChamferFactory(SmoothProfileFactory):
         :param position: The position of the node.
         :param child: The child object on which the smoothing must be applied.
         """
-        return Chamfer(length=self._length,
-                       height=self._height,
+        return Chamfer(skew_length=self._skew_length,
+                       skew_height=self._skew_height,
                        inner_angle=inner_angle,
                        normal_angle=normal_angle,
                        position=position,

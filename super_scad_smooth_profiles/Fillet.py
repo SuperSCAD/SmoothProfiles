@@ -7,7 +7,6 @@ from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
 from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.transformation.Position2D import Position2D
-from super_scad.transformation.Rotate2D import Rotate2D
 from super_scad.transformation.Translate2D import Translate2D
 from super_scad.type import Vector2
 from super_scad_circle_sector.CircleSector import CircleSector
@@ -45,6 +44,22 @@ class Fillet(SmoothProfile):
         Return the radius of the fillet.
         """
         return self.uc(self._args['radius'])
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def size1(self) -> float:
+        """
+        Returns the size of the profile on the first vertex at the node.
+        """
+        return self.radius
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def size2(self) -> float:
+        """
+        Returns the size of the profile on the second vertex at the node.
+        """
+        return self.radius
 
     # ------------------------------------------------------------------------------------------------------------------
     def build(self, context: Context) -> ScadWidget:
