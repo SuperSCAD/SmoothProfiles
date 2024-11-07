@@ -58,11 +58,9 @@ class Chamfer(SmoothProfile):
 
         inner_angle = self.inner_angle
         if inner_angle > 180:
-            inner_angle = Angle.normalize(360.0 - inner_angle)
+            inner_angle = 360.0 - inner_angle
 
-        angle = Angle.normalize(inner_angle / 2.0, 180.0)
-
-        return 0.5 * self.skew_length / math.tan(math.radians(angle))
+        return 0.5 * self.skew_length / math.tan(math.radians(0.5 * inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     @property
@@ -73,9 +71,11 @@ class Chamfer(SmoothProfile):
         if 'skew_length' in self._args:
             return self.uc(self._args['skew_length'])
 
-        angle = Angle.normalize(self.inner_angle, 180.0)
+        inner_angle = self.inner_angle
+        if inner_angle > 180:
+            inner_angle = 360.0 - inner_angle
 
-        return 2.0 * self.skew_height * math.tan(math.radians(0.5 * angle))
+        return 2.0 * self.skew_height * math.tan(math.radians(0.5 * inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     @property
@@ -83,9 +83,11 @@ class Chamfer(SmoothProfile):
         """
         Returns the size of the profile on the first vertex at the node.
         """
-        alpha = Angle.normalize(self.inner_angle, 180.0) / 2.0
+        inner_angle = self.inner_angle
+        if inner_angle > 180:
+            inner_angle = 360.0 - inner_angle
 
-        return self.skew_height / math.sin(math.radians(alpha))
+        return self.skew_height / math.cos(math.radians(0.5 * inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     @property

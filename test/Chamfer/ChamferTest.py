@@ -1,5 +1,3 @@
-import math
-
 from super_scad.boolean.Empty import Empty
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
@@ -23,25 +21,31 @@ class FilletTest(ScadTestCase):
         """
         # Sharp angle.
         profile = Chamfer(skew_length=5.0,
-                          inner_angle=90.0,
+                          inner_angle=45.0,
                           normal_angle=0.0,
                           position=Vector2.origin, child=Empty())
 
+        p1 = Vector2(0.5 * profile.skew_length, 0.0)
+        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
+
         self.assertAlmostEqual(5.0, profile.skew_length)
-        self.assertAlmostEqual(2.5, profile.skew_height)
-        self.assertAlmostEqual(2.5 * math.sqrt(2.0), profile.size1)
-        self.assertAlmostEqual(2.5 * math.sqrt(2.0), profile.size2)
+        self.assertAlmostEqual(0.0, p2.x)
+        self.assertAlmostEqual(p2.y, profile.skew_height)
+        self.assertAlmostEqual(profile.size1, profile.size2)
 
         # Oblige angle.
         profile = Chamfer(skew_length=5.0,
-                          inner_angle=90.0,
+                          inner_angle=135.0,
                           normal_angle=0.0,
                           position=Vector2.origin, child=Empty())
 
+        p1 = Vector2(0.5 * profile.skew_length, 0.0)
+        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
+
         self.assertAlmostEqual(5.0, profile.skew_length)
-        self.assertAlmostEqual(2.5, profile.skew_height)
-        self.assertAlmostEqual(2.5 * math.sqrt(2.0), profile.size1)
-        self.assertAlmostEqual(2.5 * math.sqrt(2.0), profile.size2)
+        self.assertAlmostEqual(0.0, p2.x)
+        self.assertAlmostEqual(p2.y, profile.skew_height)
+        self.assertAlmostEqual(profile.size1, profile.size2)
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_skew_height(self):
@@ -50,25 +54,45 @@ class FilletTest(ScadTestCase):
         """
         # Sharp angle.
         profile = Chamfer(skew_height=5.0,
-                          inner_angle=90.0,
+                          inner_angle=45.0,
                           normal_angle=0.0,
                           position=Vector2.origin, child=Empty())
 
-        self.assertAlmostEqual(10.0, profile.skew_length)
+        p1 = Vector2(0.5 * profile.skew_length, 0.0)
+        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
+
         self.assertAlmostEqual(5.0, profile.skew_height)
-        self.assertAlmostEqual(5.0 * math.sqrt(2.0), profile.size1)
-        self.assertAlmostEqual(5.0 * math.sqrt(2.0), profile.size2)
+        self.assertAlmostEqual(0.0, p2.x)
+        self.assertAlmostEqual(p2.y, profile.skew_height)
+        self.assertAlmostEqual(profile.size1, profile.size2)
 
         # Oblige angle.
         profile = Chamfer(skew_height=5.0,
-                          inner_angle=90.0,
+                          inner_angle=135.0,
                           normal_angle=0.0,
                           position=Vector2.origin, child=Empty())
 
-        self.assertAlmostEqual(10.0, profile.skew_length)
+        p1 = Vector2(0.5 * profile.skew_length, 0.0)
+        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
+
         self.assertAlmostEqual(5.0, profile.skew_height)
-        self.assertAlmostEqual(5.0 * math.sqrt(2.0), profile.size1)
-        self.assertAlmostEqual(5.0 * math.sqrt(2.0), profile.size2)
+        self.assertAlmostEqual(0.0, p2.x)
+        self.assertAlmostEqual(p2.y, profile.skew_height)
+        self.assertAlmostEqual(profile.size1, profile.size2)
+
+        # Negative Sharp angle.
+        profile = Chamfer(skew_height=5.0,
+                          inner_angle=-45.0,
+                          normal_angle=0.0,
+                          position=Vector2.origin, child=Empty())
+
+        p1 = Vector2(0.5 * profile.skew_length, 0.0)
+        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
+
+        self.assertAlmostEqual(5.0, profile.skew_height)
+        self.assertAlmostEqual(0.0, p2.x)
+        self.assertAlmostEqual(-p2.y, profile.skew_height)
+        self.assertAlmostEqual(profile.size1, profile.size2)
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_convex(self) -> None:
