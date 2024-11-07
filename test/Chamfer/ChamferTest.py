@@ -14,7 +14,7 @@ class FilletTest(ScadTestCase):
     """
 
     # ------------------------------------------------------------------------------------------------------------------
-    def testConvex(self) -> None:
+    def test_convex(self) -> None:
         """
         Test chamfer for convex corners with sharp and oblique angles.
         """
@@ -23,7 +23,7 @@ class FilletTest(ScadTestCase):
         scad = Scad(context=Context(fs=0.1, fa=1.0))
         body = Polygon(points=[Vector2(0, 10), Vector2(-20, 0), Vector2(0, -10), Vector2(20, 0)])
 
-        factory = ChamferFactory(length=5.0)
+        factory = ChamferFactory(skew_length=5.0)
         inner_angles = body.inner_angles
         normal_angles = body.normal_angles
         nodes = body.primary
@@ -39,7 +39,7 @@ class FilletTest(ScadTestCase):
         self.assertEqual(expected, actual)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def testConcaveSharp(self) -> None:
+    def test_concave_sharp(self) -> None:
         """
         Test chamfer for concave corners with a sharp angle.
         """
@@ -51,12 +51,12 @@ class FilletTest(ScadTestCase):
         inner_angles = body.inner_angles
         normal_angles = body.normal_angles
         nodes = body.primary
-        body = Chamfer(length=5.0,
+        body = Chamfer(skew_length=5.0,
                        inner_angle=inner_angles[0],
                        normal_angle=normal_angles[0],
                        position=nodes[0],
                        child=body)
-        body = Chamfer(length=5.0,
+        body = Chamfer(skew_length=5.0,
                        inner_angle=inner_angles[2],
                        normal_angle=normal_angles[2],
                        position=nodes[2],

@@ -14,7 +14,7 @@ class FilletTest(ScadTestCase):
     """
 
     # ------------------------------------------------------------------------------------------------------------------
-    def testConvex(self) -> None:
+    def test_convex(self) -> None:
         """
         Test fillet for convex corners with sharp and oblique angles.
         """
@@ -39,7 +39,7 @@ class FilletTest(ScadTestCase):
         self.assertEqual(expected, actual)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def testConcaveSharp(self) -> None:
+    def test_concave_sharp(self) -> None:
         """
         Test fillet for concave corners with a sharp angle.
         """
@@ -63,7 +63,7 @@ class FilletTest(ScadTestCase):
         self.assertEqual(expected, actual)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def testConcaveOblique(self) -> None:
+    def test_concave_oblique(self) -> None:
         """
         Test fillet for concave corners with an oblique angle.
         """
@@ -87,7 +87,7 @@ class FilletTest(ScadTestCase):
         self.assertEqual(expected, actual)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def testConvexNegative(self) -> None:
+    def test_convex_negative(self) -> None:
         """
         Test fillet for convex corners with sharp and oblique angles.
         """
@@ -112,7 +112,7 @@ class FilletTest(ScadTestCase):
         self.assertEqual(expected, actual)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def testConcaveNeg(self) -> None:
+    def test_concave_neg(self) -> None:
         """
         Test fillet for concave corners with a sharp angle.
         """
