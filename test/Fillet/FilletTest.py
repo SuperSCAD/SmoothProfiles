@@ -1,3 +1,5 @@
+from lib2to3.fixes.fix_input import context
+
 from super_scad.boolean.Empty import Empty
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
@@ -48,12 +50,13 @@ class FilletTest(ScadTestCase):
         """
         path_actual, path_expected = self.paths()
 
-        scad = Scad(context=Context(fs=0.1, fa=1.0))
+        context = Context(fs=0.1, fa=1.0)
+        scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 10), Vector2(-20, 0), Vector2(0, -10), Vector2(20, 0)])
 
         factory = FilletFactory(radius=5.0)
-        inner_angles = body.inner_angles
-        normal_angles = body.normal_angles
+        inner_angles = body.inner_angles(context)
+        normal_angles = body.normal_angles(context)
         nodes = body.primary
         for index in range(len(nodes)):
             body = factory.create_smooth_profile(inner_angle=inner_angles[index],
@@ -73,11 +76,12 @@ class FilletTest(ScadTestCase):
         """
         path_actual, path_expected = self.paths()
 
-        scad = Scad(context=Context(fs=0.1, fa=1.0))
+        context = Context(fs=0.1, fa=1.0)
+        scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 50), Vector2(20, 0), Vector2(0, 40), Vector2(-20, 0)])
 
-        inner_angles = body.inner_angles
-        normal_angles = body.normal_angles
+        inner_angles = body.inner_angles(context)
+        normal_angles = body.normal_angles(context)
         nodes = body.primary
         body = Fillet(radius=5.0,
                       inner_angle=inner_angles[2],
@@ -97,11 +101,12 @@ class FilletTest(ScadTestCase):
         """
         path_actual, path_expected = self.paths()
 
-        scad = Scad(context=Context(fs=0.1, fa=1.0))
+        context = Context(fs=0.1, fa=1.0)
+        scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 10), Vector2(20, 0), Vector2(0, 5), Vector2(-20, 0)])
 
-        inner_angles = body.inner_angles
-        normal_angles = body.normal_angles
+        inner_angles = body.inner_angles(context)
+        normal_angles = body.normal_angles(context)
         nodes = body.primary
         body = Fillet(radius=5.0,
                       inner_angle=inner_angles[2],
@@ -121,11 +126,12 @@ class FilletTest(ScadTestCase):
         """
         path_actual, path_expected = self.paths()
 
-        scad = Scad(context=Context(fs=0.1, fa=1.0))
+        context = Context(fs=0.1, fa=1.0)
+        scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 10), Vector2(-20, 0), Vector2(0, -10), Vector2(20, 0)])
 
-        inner_angles = body.inner_angles
-        normal_angles = body.normal_angles
+        inner_angles = body.inner_angles(context)
+        normal_angles = body.normal_angles(context)
         nodes = body.primary
         for index in range(len(nodes)):
             body = Fillet(radius=-5.0,
@@ -146,11 +152,12 @@ class FilletTest(ScadTestCase):
         """
         path_actual, path_expected = self.paths()
 
-        scad = Scad(context=Context(fs=0.1, fa=1.0))
+        context = Context(fs=0.1, fa=1.0)
+        scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 50), Vector2(20, 0), Vector2(0, 40), Vector2(-20, 0)])
 
-        inner_angles = body.inner_angles
-        normal_angles = body.normal_angles
+        inner_angles = body.inner_angles(context)
+        normal_angles = body.normal_angles(context)
         nodes = body.primary
         body = Fillet(radius=-5.0,
                       inner_angle=inner_angles[2],
