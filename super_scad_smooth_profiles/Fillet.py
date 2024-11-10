@@ -103,9 +103,11 @@ class Fillet(SmoothProfile):
         """
         radius = self.radius
 
-        x = radius * math.cos(alpha) + context.eps
+        x = radius * math.cos(alpha)
         y = radius * math.cos(alpha) ** 2 / math.sin(alpha)
-        polygon = Polygon(points=[Vector2(0.0, context.eps), Vector2(x, -y), Vector2(-x, -y)], convexity=2)
+        polygon = Polygon(points=[Vector2.origin, Vector2(x, -y), Vector2(-x, -y)],
+                          extend_sides_by_eps={0, 2},
+                          convexity=2)
         circle = Circle(radius=radius, fn4n=True)
         fillet = Difference(children=[polygon,
                                       Translate2D(vector=Vector2(0.0, -radius / math.sin(alpha)),

@@ -101,7 +101,7 @@ class FilletTest(ScadTestCase):
         """
         path_actual, path_expected = self.paths()
 
-        context = Context(fs=0.1, fa=1.0)
+        context = Context(fs=0.1, fa=1.0, eps=0.5)
         scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 10), Vector2(-20, 0), Vector2(0, -10), Vector2(20, 0)])
 
@@ -127,7 +127,7 @@ class FilletTest(ScadTestCase):
         """
         path_actual, path_expected = self.paths()
 
-        context = Context(fs=0.1, fa=1.0)
+        context = Context(fs=0.1, fa=1.0, eps=0.5)
         scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 50), Vector2(20, 0), Vector2(0, 40), Vector2(-20, 0)])
 

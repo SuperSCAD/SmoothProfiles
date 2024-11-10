@@ -137,16 +137,6 @@ class Chamfer(SmoothProfile):
              Vector2.from_polar_coordinates(0.5 * self.skew_length, normal_angle + 90.0)
         p3 = p2 + Vector2.from_polar_coordinates(self.skew_length, normal_angle - 90.0)
 
-        eps0 = Vector2.from_polar_coordinates(context.eps, normal_angle + 180.0)
-        eps1 = Vector2.from_polar_coordinates(context.eps, normal_angle + alpha + 90.0)
-        eps2 = Vector2.from_polar_coordinates(context.eps, normal_angle - alpha - 90.0)
-
-        return Polygon(points=[p1 + eps0,
-                               p1 + eps1,
-                               p2 + eps1,
-                               p2,
-                               p3,
-                               p3 + eps2,
-                               p1 + eps2])
+        return Polygon(points=[p1, p2, p3], extend_sides_by_eps={0, 2})
 
 # ----------------------------------------------------------------------------------------------------------------------
