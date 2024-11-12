@@ -1,3 +1,4 @@
+import math
 from lib2to3.fixes.fix_input import context
 
 from super_scad.boolean.Empty import Empty
@@ -21,27 +22,15 @@ class FilletTest(ScadTestCase):
         """
         Test the size of a fillet.
         """
-        # Sharp angle.
-        profile = Fillet(radius=5.0,
-                         inner_angle=45.0,
-                         normal_angle=0.0,
-                         position=Vector2.origin,
-                         child=Empty())
+        factory = FilletFactory(radius=5.0)
 
-        self.assertAlmostEqual(5.0, profile.radius)
-        self.assertAlmostEqual(5.0, profile.size1)
-        self.assertAlmostEqual(5.0, profile.size2)
+        # Sharp angle.
+        self.assertAlmostEqual(12.0711, factory.offset1(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(12.0711, factory.offset2(inner_angle=45.0), places=4)
 
         # Oblique angle.
-        profile = Fillet(radius=5.0,
-                         inner_angle=135.0,
-                         normal_angle=0.0,
-                         position=Vector2.origin,
-                         child=Empty())
-
-        self.assertAlmostEqual(5.0, profile.radius)
-        self.assertAlmostEqual(5.0, profile.size1)
-        self.assertAlmostEqual(5.0, profile.size2)
+        self.assertAlmostEqual(2.0711, factory.offset1(inner_angle=135.0), places=4)
+        self.assertAlmostEqual(2.0711, factory.offset2(inner_angle=135.0), places=4)
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_convex(self) -> None:

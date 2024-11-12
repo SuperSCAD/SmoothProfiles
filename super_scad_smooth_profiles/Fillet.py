@@ -46,22 +46,6 @@ class Fillet(SmoothProfile):
         return self.uc(self._args['radius'])
 
     # ------------------------------------------------------------------------------------------------------------------
-    @property
-    def size1(self) -> float:
-        """
-        Returns the size of the profile on the first vertex at the node.
-        """
-        return self.radius
-
-    # ------------------------------------------------------------------------------------------------------------------
-    @property
-    def size2(self) -> float:
-        """
-        Returns the size of the profile on the second vertex at the node.
-        """
-        return self.radius
-
-    # ------------------------------------------------------------------------------------------------------------------
     def build(self, context: Context) -> ScadWidget:
         """
         Builds a SuperSCAD widget.
@@ -122,11 +106,9 @@ class Fillet(SmoothProfile):
         """
         Builds a fillet.
         """
-        inner_angle = self.inner_angle
-
         return Translate2D(vector=self.position,
-                           child=CircleSector(start_angle=self.normal_angle + 0.5 * inner_angle,
-                                              end_angle=self.normal_angle - 0.5 * inner_angle,
+                           child=CircleSector(start_angle=self.normal_angle + 0.5 * self.inner_angle,
+                                              end_angle=self.normal_angle - 0.5 * self.inner_angle,
                                               radius=-self.radius,
                                               extend_legs_by_eps=True,
                                               fn4n=True))

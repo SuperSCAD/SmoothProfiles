@@ -19,80 +19,81 @@ class FilletTest(ScadTestCase):
         """
         Test chamfer given the length of the skew side.
         """
+        factory = ChamferFactory(skew_length=5.0)
+
         # Sharp angle.
-        profile = Chamfer(skew_length=5.0,
-                          inner_angle=45.0,
-                          normal_angle=0.0,
-                          position=Vector2.origin, child=Empty())
+        inner_angle = 45.0
+        profile = factory.create_smooth_profile(inner_angle=inner_angle,
+                                                normal_angle=0.0,
+                                                position=Vector2.origin, child=Empty())
+
+        self.assertIsInstance(profile, Chamfer)
 
         p1 = Vector2(0.5 * profile.skew_length, 0.0)
-        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
+        p2 = p1 + Vector2.from_polar_coordinates(factory.offset1(inner_angle=inner_angle),
+                                                 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length)
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height)
-        self.assertAlmostEqual(profile.size1, profile.size2)
+        self.assertAlmostEqual(factory.offset1(inner_angle=inner_angle), factory.offset2(inner_angle=inner_angle))
 
         # Oblige angle.
-        profile = Chamfer(skew_length=5.0,
-                          inner_angle=135.0,
-                          normal_angle=0.0,
-                          position=Vector2.origin, child=Empty())
+        inner_angle = 135.0
+        profile = factory.create_smooth_profile(inner_angle=inner_angle,
+                                                normal_angle=0.0,
+                                                position=Vector2.origin, child=Empty())
+
+        self.assertIsInstance(profile, Chamfer)
 
         p1 = Vector2(0.5 * profile.skew_length, 0.0)
-        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
+        p2 = p1 + Vector2.from_polar_coordinates(factory.offset1(inner_angle=inner_angle),
+                                                 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length)
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height)
-        self.assertAlmostEqual(profile.size1, profile.size2)
+        self.assertAlmostEqual(factory.offset1(inner_angle=inner_angle), factory.offset2(inner_angle=inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_skew_height(self):
         """
         Test chamfer given the height of the skew side.
         """
+        factory = ChamferFactory(skew_height=5.0)
+
         # Sharp angle.
-        profile = Chamfer(skew_height=5.0,
-                          inner_angle=45.0,
-                          normal_angle=0.0,
-                          position=Vector2.origin, child=Empty())
+        inner_angle = 45.0
+        profile = factory.create_smooth_profile(inner_angle=inner_angle,
+                                                normal_angle=0.0,
+                                                position=Vector2.origin,
+                                                child=Empty())
+        self.assertIsInstance(profile, Chamfer)
 
         p1 = Vector2(0.5 * profile.skew_length, 0.0)
-        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
+        p2 = p1 + Vector2.from_polar_coordinates(factory.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_height)
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height)
-        self.assertAlmostEqual(profile.size1, profile.size2)
+        self.assertAlmostEqual(factory.offset1(inner_angle=inner_angle), factory.offset2(inner_angle=inner_angle))
 
         # Oblige angle.
-        profile = Chamfer(skew_height=5.0,
-                          inner_angle=135.0,
-                          normal_angle=0.0,
-                          position=Vector2.origin, child=Empty())
+        inner_angle = 135.0
+        profile = factory.create_smooth_profile(inner_angle=inner_angle,
+                                                normal_angle=0.0,
+                                                position=Vector2.origin,
+                                                child=Empty())
+
+        self.assertIsInstance(profile, Chamfer)
 
         p1 = Vector2(0.5 * profile.skew_length, 0.0)
-        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
+        p2 = p1 + Vector2.from_polar_coordinates(factory.offset1(inner_angle=inner_angle), 90.0 + 0.5*inner_angle )
 
         self.assertAlmostEqual(5.0, profile.skew_height)
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height)
-        self.assertAlmostEqual(profile.size1, profile.size2)
-
-        # Negative Sharp angle.
-        profile = Chamfer(skew_height=5.0,
-                          inner_angle=-45.0,
-                          normal_angle=0.0,
-                          position=Vector2.origin, child=Empty())
-
-        p1 = Vector2(0.5 * profile.skew_length, 0.0)
-        p2 = p1 + Vector2.from_polar_coordinates(profile.size1, 90.0 + profile.inner_angle / 2.0)
-
-        self.assertAlmostEqual(5.0, profile.skew_height)
-        self.assertAlmostEqual(0.0, p2.x)
-        self.assertAlmostEqual(-p2.y, profile.skew_height)
-        self.assertAlmostEqual(profile.size1, profile.size2)
+        self.assertAlmostEqual(factory.offset1(inner_angle=inner_angle), factory.offset2(inner_angle=inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_convex(self) -> None:

@@ -1,3 +1,5 @@
+import math
+
 from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.type import Vector2
 from super_scad_smooth_profile.SmoothProfile import SmoothProfile
@@ -33,6 +35,57 @@ class ChamferFactory(SmoothProfileFactory):
         """
 
     # ------------------------------------------------------------------------------------------------------------------
+    def skew_height(self, *, inner_angle: float) -> float:
+        """
+        The skew_height of the chamfer, measured perpendicular for the skew size to the node.
+
+        :param inner_angle: Inner angle between the two vertices of the node.
+        """
+        if self._skew_height is not None:
+            return self._skew_height
+
+        if inner_angle > 180:
+            inner_angle = 360.0 - inner_angle
+
+        return 0.5 * self._skew_length / math.tan(math.radians(0.5 * inner_angle))
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def skew_length(self, *, inner_angle: float) -> float:
+        """
+        The length of the skew side of the chamfer.
+
+        :param inner_angle: Inner angle between the two vertices of the node.
+        """
+        if self._skew_length is not None:
+            return self._skew_length
+
+        if inner_angle > 180:
+            inner_angle = 360.0 - inner_angle
+
+        return 2.0 * self._skew_height * math.tan(math.radians(0.5 * inner_angle))
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def offset1(self, *, inner_angle: float) -> float:
+        """
+        Returns the offset of the smooth profile on the first vertex of the node.
+
+        :param inner_angle: Inner angle between the two vertices of the node.
+        """
+        if inner_angle > 180:
+            inner_angle = 360.0 - inner_angle
+
+        return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * inner_angle))
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def offset2(self, *, inner_angle: float) -> float:
+        """
+        Returns the offset of the smooth profile on the second vertex of the node.
+
+        :param inner_angle: Inner angle between the two vertices of the node.
+        """
+        return self.offset1(inner_angle=inner_angle)
+
+    # ------------------------------------------------------------------------------------------------------------------
     def create_smooth_profile(self,
                               *,
                               inner_angle: float,
@@ -55,4 +108,4 @@ class ChamferFactory(SmoothProfileFactory):
                        position=position,
                        child=child)
 
-    # ------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------

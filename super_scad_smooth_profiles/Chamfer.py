@@ -78,54 +78,28 @@ class Chamfer(SmoothProfile):
         return 2.0 * self.skew_height * math.tan(math.radians(0.5 * inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
-    @property
-    def size1(self) -> float:
-        """
-        Returns the size of the profile on the first vertex at the node.
-        """
-        inner_angle = self.inner_angle
-        if inner_angle > 180:
-            inner_angle = 360.0 - inner_angle
-
-        return self.skew_height / math.cos(math.radians(0.5 * inner_angle))
-
-    # ------------------------------------------------------------------------------------------------------------------
-    @property
-    def size2(self) -> float:
-        """
-        Returns the size of the profile on the second vertex at the node.
-        """
-        return self.size1
-
-    # ------------------------------------------------------------------------------------------------------------------
     def build(self, context: Context) -> ScadWidget:
         """
         Builds a SuperSCAD widget.
 
         :param context: The build context.
         """
-        inner_angle = self.inner_angle
-
-        if inner_angle < 180.0:
+        if self.inner_angle < 180.0:
             # The corner is convex.
-            polygon = self._build_polygon(context,
-                                          self.normal_angle,
-                                          Angle.normalize(self.inner_angle / 2.0, 180.0))
+            polygon = self._build_polygon(context, self.normal_angle)
 
             return Difference(children=[self.child, polygon])
 
-        if inner_angle > 180.0:
+        if self.inner_angle > 180.0:
             # The corner is concave.
-            polygon = self._build_polygon(context,
-                                          Angle.normalize(self.normal_angle - 180.0),
-                                          Angle.normalize((360.0 - self.inner_angle) / 2.0, 90.0))
+            polygon = self._build_polygon(context, Angle.normalize(self.normal_angle - 180.0))
 
             return Union(children=[self.child, polygon])
 
         return self.child
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _build_polygon(self, context: Context, normal_angle: float, alpha: float) -> ScadWidget:
+    def _build_polygon(self, context: Context, normal_angle: float) -> ScadWidget:
         """
         Returns a masking polygon.
 
