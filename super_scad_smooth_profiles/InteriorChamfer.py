@@ -1,138 +1,106 @@
 import math
 
-from super_scad.boolean.Difference import Difference
-from super_scad.boolean.Union import Union
-from super_scad.d2.Polygon import Polygon
-from super_scad.scad.Context import Context
 from super_scad.scad.ScadSingleChildParent import ScadSingleChildParent
 from super_scad.scad.ScadWidget import ScadWidget
-from super_scad.type import Vector2
-from super_scad.type.Angle import Angle
+from super_scad_smooth_profile.SmoothProfile import SmoothProfile
+from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
+
+from super_scad_smooth_profiles.InteriorChamferWidget import InteriorChamferWidget
 
 
-class InteriorChamfer(ScadSingleChildParent):
+class InteriorChamfer(SmoothProfile):
     """
-    Applies a chamfer to vertices at a node.
+    A profile that produces interior chamfer smoothing profile widgets.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self,
                  *,
                  skew_length: float | None = None,
-                 skew_height: float | None = None,
-                 inner_angle: float,
-                 normal_angle: float,
-                 position: Vector2,
-                 child: ScadWidget):
+                 skew_height: float | None = None):
         """
         Object constructor.
 
         :param skew_length: The length of the skew side of the chamfer.
-        :param skew_height: The height of the chamfer, measured perpendicular for the skew size to the node.
-        :param inner_angle: Inner angle between the vertices.
-        :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
-                             the two vertices and with origin at the node.
-        :param child: The child object on which the fillet is applied.
+        :param skew_height: The skew_height of the chamfer, measured perpendicular for the skew size to the node.
         """
-        ScadSingleChildParent.__init__(self, args=locals(), child=child)
-
-        self._skew_length = skew_length
+        self._skew_length: float = skew_length
         """
-        The length of the skew side of the chamfer.
+        The length of the chamfer.
         """
 
-        self._skew_height = skew_height
+        self._skew_height: float = skew_height
         """
-        The height of the chamfer, measured perpendicular for the skew size to the node.
+        The height of the chamfer.
         """
-
-        self._inner_angle: float = Angle.normalize(inner_angle)
-        """
-        The inner angle between the vertices at the node.
-        """
-
-        self._normal_angle: float = Angle.normalize(normal_angle)
-        """
-        The normal angle of the vertices at the node.
-        """
-
-        self._position: Vector2 = position
-        """
-        The position of the node.
-        """
-
-        self._validate_arguments()
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _validate_arguments(self) -> None:
-        """
-        Validates the arguments supplied to the constructor of this profile.
-        """
-        # admission = ArgumentAdmission(self._args)
-        # admission.validate_exclusive({'skew_length'}, {'skew_height'})
-
-    # ------------------------------------------------------------------------------------------------------------------
-    @property
-    def skew_height(self) -> float:
+    def skew_height(self, *, inner_angle: float) -> float:
         """
         The skew_height of the chamfer, measured perpendicular for the skew size to the node.
-        """
-        if self._skew_height is None:
-            inner_angle = self._inner_angle
-            if inner_angle > 180:
-                inner_angle = 360.0 - inner_angle
-            self._skew_height = 0.5 * self.skew_length / math.tan(math.radians(0.5 * inner_angle))
 
-        return self._skew_height
+        :param inner_angle: Inner angle between the two vertices of the node.
+        """
+        if self._skew_height is not None:
+            return self._skew_height
+
+        if inner_angle > 180.0:
+            inner_angle = 360.0 - inner_angle
+
+        return 0.5 * self._skew_length / math.tan(math.radians(0.5 * inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
-    @property
-    def skew_length(self) -> float:
+    def skew_length(self, *, inner_angle: float) -> float:
         """
         The length of the skew side of the chamfer.
-        """
-        if self._skew_length is None:
-            inner_angle = self._inner_angle
-            if inner_angle > 180:
-                inner_angle = 360.0 - inner_angle
-            self._skew_length = 2.0 * self.skew_height * math.tan(math.radians(0.5 * inner_angle))
 
-        return self._skew_length
+        :param inner_angle: Inner angle between the two vertices of the node.
+        """
+        if self._skew_length is not None:
+            return self._skew_length
+
+        if inner_angle > 180.0:
+            inner_angle = 360.0 - inner_angle
+
+        return 2.0 * self._skew_height * math.tan(math.radians(0.5 * inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
-    def build(self, context: Context) -> ScadWidget:
+    def offset1(self, *, inner_angle: float) -> float:
         """
-        Builds a SuperSCAD widget.
+        Returns the offset of the smooth profile on the first vertex of the node.
 
-        :param context: The build context.
+        :param inner_angle: Inner angle between the two vertices of the node.
         """
-        if self._inner_angle < 180.0:
-            # The corner is convex.
-            polygon = self._build_polygon(self._normal_angle)
+        if inner_angle == 180.0:
+            return 0.0
 
-            return Difference(children=[self.child, polygon])
+        if inner_angle > 180.0:
+            inner_angle = 360.0 - inner_angle
 
-        if self._inner_angle > 180.0:
-            # The corner is concave.
-            polygon = self._build_polygon(Angle.normalize(self._normal_angle - 180.0))
-
-            return Union(children=[self.child, polygon])
-
-        return self.child
+        return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _build_polygon(self, normal_angle: float) -> ScadWidget:
+    def offset2(self, *, inner_angle: float) -> float:
         """
-        Returns a masking polygon.
+        Returns the offset of the smooth profile on the second vertex of the node.
 
-        :param normal_angle: The normal angle of the vertices at the node.
+        :param inner_angle: Inner angle between the two vertices of the node.
         """
-        p1 = self._position
-        p2 = self._position + \
-             Vector2.from_polar_coordinates(self.skew_height, normal_angle) + \
-             Vector2.from_polar_coordinates(0.5 * self.skew_length, normal_angle + 90.0)
-        p3 = p2 + Vector2.from_polar_coordinates(self.skew_length, normal_angle - 90.0)
+        return self.offset1(inner_angle=inner_angle)
 
-        return Polygon(points=[p1, p2, p3], extend_sides_by_eps={0, 2})
+    # ------------------------------------------------------------------------------------------------------------------
+    def create_smooth_profile(self, *, params: SmoothProfileParams, child: ScadWidget) -> ScadSingleChildParent:
+        """
+        Returns a smoothing profile widget creating a chamfer.
+
+        :param params: The parameters for the smooth profile widget.
+        :param child: The child object on which the smoothing must be applied.
+        """
+        return InteriorChamferWidget(skew_length=self._skew_length,
+                                     skew_height=self._skew_height,
+                                     inner_angle=params.inner_angle,
+                                     normal_angle=params.normal_angle,
+                                     position=params.position,
+                                     child=child)
 
 # ----------------------------------------------------------------------------------------------------------------------
