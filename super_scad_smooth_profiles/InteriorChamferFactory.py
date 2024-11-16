@@ -1,16 +1,16 @@
 import math
 
+from super_scad.scad.ScadSingleChildParent import ScadSingleChildParent
 from super_scad.scad.ScadWidget import ScadWidget
-from super_scad.type import Vector2
-from super_scad_smooth_profile.SmoothProfile import SmoothProfile
 from super_scad_smooth_profile.SmoothProfileFactory import SmoothProfileFactory
+from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
-from super_scad_smooth_profiles.Chamfer import Chamfer
+from super_scad_smooth_profiles.InteriorChamfer import InteriorChamfer
 
 
-class ChamferFactory(SmoothProfileFactory):
+class InteriorChamferFactory(SmoothProfileFactory):
     """
-    A factory that produces chamfer smoothing profiles.
+    A factory that produces interior chamfer smoothing profiles.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ class ChamferFactory(SmoothProfileFactory):
         if self._skew_height is not None:
             return self._skew_height
 
-        if inner_angle > 180:
+        if inner_angle > 180.0:
             inner_angle = 360.0 - inner_angle
 
         return 0.5 * self._skew_length / math.tan(math.radians(0.5 * inner_angle))
@@ -59,7 +59,7 @@ class ChamferFactory(SmoothProfileFactory):
         if self._skew_length is not None:
             return self._skew_length
 
-        if inner_angle > 180:
+        if inner_angle > 180.0:
             inner_angle = 360.0 - inner_angle
 
         return 2.0 * self._skew_height * math.tan(math.radians(0.5 * inner_angle))
@@ -71,7 +71,10 @@ class ChamferFactory(SmoothProfileFactory):
 
         :param inner_angle: Inner angle between the two vertices of the node.
         """
-        if inner_angle > 180:
+        if inner_angle == 180.0:
+            return 0.0
+
+        if inner_angle > 180.0:
             inner_angle = 360.0 - inner_angle
 
         return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * inner_angle))
@@ -86,26 +89,18 @@ class ChamferFactory(SmoothProfileFactory):
         return self.offset1(inner_angle=inner_angle)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def create_smooth_profile(self,
-                              *,
-                              inner_angle: float,
-                              normal_angle: float,
-                              position: Vector2,
-                              child: ScadWidget) -> SmoothProfile:
+    def create_smooth_profile(self, *, params: SmoothProfileParams, child: ScadWidget) -> ScadSingleChildParent:
         """
         Returns a smoothing profile widget creating a chamfer.
 
-        :param inner_angle: Inner angle between the vertices.
-        :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
-                             the two vertices and with origin at the node.
-        :param position: The position of the node.
+        :param params: The parameters for the smooth profile widget.
         :param child: The child object on which the smoothing must be applied.
         """
-        return Chamfer(skew_length=self._skew_length,
-                       skew_height=self._skew_height,
-                       inner_angle=inner_angle,
-                       normal_angle=normal_angle,
-                       position=position,
-                       child=child)
+        return InteriorChamfer(skew_length=self._skew_length,
+                               skew_height=self._skew_height,
+                               inner_angle=params.inner_angle,
+                               normal_angle=params.normal_angle,
+                               position=params.position,
+                               child=child)
 
 # ----------------------------------------------------------------------------------------------------------------------
