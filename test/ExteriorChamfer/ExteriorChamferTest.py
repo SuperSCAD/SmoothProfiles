@@ -5,7 +5,7 @@ from super_scad.scad.Scad import Scad
 from super_scad.type import Vector2
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
-from super_scad_smooth_profiles.ExteriorChamfer import ExteriorChamfer
+from super_scad_smooth_profiles.Chamfer import Chamfer
 from super_scad_smooth_profiles.ExteriorChamferWidget import ExteriorChamferWidget
 from test.ScadTestCase import ScadTestCase
 
@@ -21,7 +21,7 @@ class ExteriorChamferTest(ScadTestCase):
         Test the size of a chamfer on the first side.
         """
         # Positive radius.
-        profile = ExteriorChamfer(skew_length=5.0, side=1)
+        profile = Chamfer(skew_length=5.0, side=1)
 
         # Sharp angle.
         self.assertAlmostEqual(2.7060, profile.offset1(inner_angle=45.0), places=4)
@@ -36,7 +36,7 @@ class ExteriorChamferTest(ScadTestCase):
         self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
 
         # Zero skew length.
-        profile = ExteriorChamfer(skew_length=0.0, side=1)
+        profile = Chamfer(skew_length=0.0, side=1)
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
         self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
 
@@ -46,7 +46,7 @@ class ExteriorChamferTest(ScadTestCase):
         Test the size of a chamfer on the second side.
         """
         # Positive radius.
-        profile = ExteriorChamfer(skew_length=5.0, side=2)
+        profile = Chamfer(skew_length=5.0, side=2)
 
         # Sharp angle.
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
@@ -61,7 +61,7 @@ class ExteriorChamferTest(ScadTestCase):
         self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
 
         # Zero skew length.
-        profile = ExteriorChamfer(skew_length=0.0, side=2)
+        profile = Chamfer(skew_length=0.0, side=2)
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
         self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
 
@@ -70,7 +70,7 @@ class ExteriorChamferTest(ScadTestCase):
         """
         Test chamfer given the length of the skew side.
         """
-        profile = ExteriorChamfer(skew_length=5.0, side=1)
+        profile = Chamfer(skew_length=5.0, side=1)
 
         # Sharp angle.
         inner_angle = 45.0
@@ -99,7 +99,7 @@ class ExteriorChamferTest(ScadTestCase):
         """
         Test chamfer given the height of the skew side.
         """
-        profile = ExteriorChamfer(skew_height=5.0, side=2)
+        profile = Chamfer(skew_height=5.0, side=2)
 
         # Sharp angle.
         inner_angle = 45.0
@@ -158,10 +158,10 @@ class ExteriorChamferTest(ScadTestCase):
         body = Polygon(points=points,
                        extend_sides_by_eps={1})
 
-        profiles = [ExteriorChamfer(skew_length=5.0, side=2),
-                    ExteriorChamfer(skew_height=3.0, side=1),
-                    ExteriorChamfer(skew_height=3.0, side=2),
-                    ExteriorChamfer(skew_length=5.0, side=1)]
+        profiles = [Chamfer(skew_length=5.0, side=2),
+                    Chamfer(skew_height=3.0, side=1),
+                    Chamfer(skew_height=3.0, side=2),
+                    Chamfer(skew_length=5.0, side=1)]
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
@@ -198,10 +198,10 @@ class ExteriorChamferTest(ScadTestCase):
         body = Polygon(points=points,
                        extend_sides_by_eps={1})
 
-        factories = [ExteriorChamfer(skew_length=0.0, side=2),
-                     ExteriorChamfer(skew_height=0.0, side=1),
-                     ExteriorChamfer(skew_height=0.0, side=2),
-                     ExteriorChamfer(skew_length=0.0, side=1)]
+        factories = [Chamfer(skew_length=0.0, side=2),
+                     Chamfer(skew_height=0.0, side=1),
+                     Chamfer(skew_height=0.0, side=2),
+                     Chamfer(skew_length=0.0, side=1)]
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)

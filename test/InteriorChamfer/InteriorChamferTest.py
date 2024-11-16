@@ -5,7 +5,7 @@ from super_scad.scad.Scad import Scad
 from super_scad.type import Vector2
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
-from super_scad_smooth_profiles.InteriorChamfer import InteriorChamfer
+from super_scad_smooth_profiles.Chamfer import Chamfer
 from super_scad_smooth_profiles.InteriorChamferWidget import InteriorChamferWidget
 from test.ScadTestCase import ScadTestCase
 
@@ -21,7 +21,7 @@ class InteriorChamferTest(ScadTestCase):
         Test the size of a fillet.
         """
         # Positive radius.
-        profile = InteriorChamfer(skew_length=5.0)
+        profile = Chamfer(skew_length=5.0)
 
         # Sharp angle.
         self.assertAlmostEqual(6.5328, profile.offset1(inner_angle=45.0), places=4)
@@ -40,7 +40,7 @@ class InteriorChamferTest(ScadTestCase):
         self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
 
         # Zero skew length.
-        profile = InteriorChamfer(skew_length=0.0)
+        profile = Chamfer(skew_length=0.0)
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
         self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
 
@@ -49,7 +49,7 @@ class InteriorChamferTest(ScadTestCase):
         """
         Test chamfer given the length of the skew side.
         """
-        profile = InteriorChamfer(skew_length=5.0)
+        profile = Chamfer(skew_length=5.0)
 
         # Sharp angle.
         inner_angle = 45.0
@@ -84,7 +84,7 @@ class InteriorChamferTest(ScadTestCase):
         """
         Test chamfer given the height of the skew side.
         """
-        profile = InteriorChamfer(skew_height=5.0)
+        profile = Chamfer(skew_height=5.0)
 
         # Sharp angle.
         inner_angle = 45.0
@@ -146,7 +146,7 @@ class InteriorChamferTest(ScadTestCase):
         scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 10), Vector2(-20, 0), Vector2(0, -10), Vector2(20, 0)])
 
-        profile = InteriorChamfer(skew_length=5.0)
+        profile = Chamfer(skew_length=5.0)
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
         nodes = body.primary

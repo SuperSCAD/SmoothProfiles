@@ -4,14 +4,14 @@ from super_scad.scad.Scad import Scad
 from super_scad.type import Vector2
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
-from super_scad_smooth_profiles.InteriorFillet import InteriorFillet
+from super_scad_smooth_profiles.Fillet import Fillet
 from super_scad_smooth_profiles.InteriorFilletWidget import InteriorFilletWidget
 from test.ScadTestCase import ScadTestCase
 
 
-class InteriorFilletTest(ScadTestCase):
+class FilletTest(ScadTestCase):
     """
-    Testcases for InteriorFillet.
+    Testcases for Fillet.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ class InteriorFilletTest(ScadTestCase):
         Test the size of a fillet.
         """
         # Positive radius.
-        profile = InteriorFillet(radius=5.0)
+        profile = Fillet(radius=5.0)
 
         # Sharp angle.
         self.assertAlmostEqual(12.0711, profile.offset1(inner_angle=45.0), places=4)
@@ -39,12 +39,12 @@ class InteriorFilletTest(ScadTestCase):
         self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
 
         # Negative radius.
-        profile = InteriorFillet(radius=-5.0)
+        profile = Fillet(radius=-5.0)
         self.assertAlmostEqual(5.0, profile.offset1(inner_angle=45.0), places=4)
         self.assertAlmostEqual(5.0, profile.offset2(inner_angle=45.0), places=4)
 
         # Zero radius.
-        profile = InteriorFillet(radius=0.0)
+        profile = Fillet(radius=0.0)
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
         self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
 
@@ -57,7 +57,7 @@ class InteriorFilletTest(ScadTestCase):
         scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 10), Vector2(-20, 0), Vector2(0, -10), Vector2(20, 0)])
 
-        profile = InteriorFillet(radius=5.0)
+        profile = Fillet(radius=5.0)
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)

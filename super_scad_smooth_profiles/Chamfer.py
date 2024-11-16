@@ -5,24 +5,27 @@ from super_scad.scad.ScadWidget import ScadWidget
 from super_scad_smooth_profile.SmoothProfile import SmoothProfile
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
+from super_scad_smooth_profiles.ExteriorChamferWidget import ExteriorChamferWidget
 from super_scad_smooth_profiles.InteriorChamferWidget import InteriorChamferWidget
 
 
-class InteriorChamfer(SmoothProfile):
+class Chamfer(SmoothProfile):
     """
-    A profile that produces interior chamfer smoothing profile widgets.
+    A profile that produces exterior chamfer smoothing profile widgets.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self,
                  *,
                  skew_length: float | None = None,
-                 skew_height: float | None = None):
+                 skew_height: float | None = None,
+                 side: int | None = None):
         """
         Object constructor.
 
         :param skew_length: The length of the skew side of the chamfer.
         :param skew_height: The skew_height of the chamfer, measured perpendicular for the skew size to the node.
+        :param side: The edge on which the exterior chamfer must be applied.
         """
         self._skew_length: float = skew_length
         """
@@ -32,6 +35,11 @@ class InteriorChamfer(SmoothProfile):
         self._skew_height: float = skew_height
         """
         The height of the chamfer.
+        """
+
+        self._side: int | None = side
+        """
+        The edge on which the exterior chamfer must be applied. 
         """
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -44,10 +52,15 @@ class InteriorChamfer(SmoothProfile):
         if self._skew_height is not None:
             return self._skew_height
 
-        if inner_angle > 180.0:
-            inner_angle = 360.0 - inner_angle
+        if self._side is None:
+            if inner_angle > 180.0:
+                inner_angle = 360.0 - inner_angle
 
-        return 0.5 * self._skew_length / math.tan(math.radians(0.5 * inner_angle))
+            return 0.5 * self._skew_length / math.tan(math.radians(0.5 * inner_angle))
+
+        outer_angle = 180.0 - inner_angle
+
+        return 0.5 * self._skew_length / math.tan(math.radians(0.5 * outer_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     def skew_length(self, *, inner_angle: float) -> float:
@@ -59,10 +72,15 @@ class InteriorChamfer(SmoothProfile):
         if self._skew_length is not None:
             return self._skew_length
 
-        if inner_angle > 180.0:
-            inner_angle = 360.0 - inner_angle
+        if self._side is None:
+            if inner_angle > 180.0:
+                inner_angle = 360.0 - inner_angle
 
-        return 2.0 * self._skew_height * math.tan(math.radians(0.5 * inner_angle))
+            return 2.0 * self._skew_height * math.tan(math.radians(0.5 * inner_angle))
+
+        outer_angle = 180.0 - inner_angle
+
+        return 2.0 * self._skew_height * math.tan(math.radians(0.5 * outer_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     def offset1(self, *, inner_angle: float) -> float:
@@ -71,13 +89,27 @@ class InteriorChamfer(SmoothProfile):
 
         :param inner_angle: Inner angle between the two vertices of the node.
         """
-        if inner_angle == 180.0:
+        if self._side is None:
+            if inner_angle == 180.0:
+                return 0.0
+
+            if inner_angle > 180.0:
+                inner_angle = 360.0 - inner_angle
+
+            return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * inner_angle))
+
+        if self._side == 1:
+            if inner_angle == 180.0:
+                return 0.0
+
+            outer_angle = 180.0 - inner_angle
+
+            return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * outer_angle))
+
+        if self._side == 2:
             return 0.0
 
-        if inner_angle > 180.0:
-            inner_angle = 360.0 - inner_angle
-
-        return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * inner_angle))
+        raise ValueError(f'Side must be 1 or 2, got {self._side}.')
 
     # ------------------------------------------------------------------------------------------------------------------
     def offset2(self, *, inner_angle: float) -> float:
@@ -86,7 +118,21 @@ class InteriorChamfer(SmoothProfile):
 
         :param inner_angle: Inner angle between the two vertices of the node.
         """
-        return self.offset1(inner_angle=inner_angle)
+        if self._side is None:
+            return self.offset1(inner_angle=inner_angle)
+
+        if self._side == 2:
+            if inner_angle == 180.0:
+                return 0.0
+
+            outer_angle = 180.0 - inner_angle
+
+            return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * outer_angle))
+
+        if self._side == 1:
+            return 0.0
+
+        raise ValueError(f'Side must be 1 or 2, got {self._side}.')
 
     # ------------------------------------------------------------------------------------------------------------------
     def create_smooth_profile(self, *, params: SmoothProfileParams, child: ScadWidget) -> ScadSingleChildParent:
@@ -96,11 +142,22 @@ class InteriorChamfer(SmoothProfile):
         :param params: The parameters for the smooth profile widget.
         :param child: The child object on which the smoothing must be applied.
         """
-        return InteriorChamferWidget(skew_length=self._skew_length,
+        if self._side is None:
+            return InteriorChamferWidget(skew_length=self._skew_length,
+                                         skew_height=self._skew_height,
+                                         inner_angle=params.inner_angle,
+                                         normal_angle=params.normal_angle,
+                                         position=params.position,
+                                         child=child)
+
+        return ExteriorChamferWidget(skew_length=self._skew_length,
                                      skew_height=self._skew_height,
+                                     side=self._side,
                                      inner_angle=params.inner_angle,
                                      normal_angle=params.normal_angle,
                                      position=params.position,
+                                     side1_is_extended_by_eps=params.side1_is_extended_by_eps,
+                                     side2_is_extended_by_eps=params.side2_is_extended_by_eps,
                                      child=child)
 
 # ----------------------------------------------------------------------------------------------------------------------

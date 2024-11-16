@@ -4,7 +4,7 @@ from super_scad.scad.Scad import Scad
 from super_scad.type import Vector2
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
-from super_scad_smooth_profiles.ExteriorFillet import ExteriorFillet
+from super_scad_smooth_profiles.Fillet import Fillet
 from test.ScadTestCase import ScadTestCase
 
 
@@ -19,7 +19,7 @@ class ExteriorFilletTest(ScadTestCase):
         Test the size of a fillet on the first side.
         """
         # Positive radius.
-        profile = ExteriorFillet(radius=5.0, side=1)
+        profile = Fillet(radius=5.0, side=1)
 
         # Sharp angle.
         self.assertAlmostEqual(12.0711, profile.offset1(inner_angle=45.0), places=4)
@@ -38,12 +38,12 @@ class ExteriorFilletTest(ScadTestCase):
         self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
 
         # Negative radius.
-        profile = ExteriorFillet(radius=-5.0, side=1)
+        profile = Fillet(radius=-5.0, side=1)
         self.assertAlmostEqual(5.0, profile.offset1(inner_angle=45.0), places=4)
         self.assertEqual(0.0, profile.offset2(inner_angle=45.0))
 
         # Zero radius.
-        profile = ExteriorFillet(radius=0.0, side=1)
+        profile = Fillet(radius=0.0, side=1)
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
         self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
 
@@ -53,7 +53,7 @@ class ExteriorFilletTest(ScadTestCase):
         Test the size of a fillet on the second side.
         """
         # Positive radius.
-        profile = ExteriorFillet(radius=5.0, side=2)
+        profile = Fillet(radius=5.0, side=2)
 
         # Sharp angle.
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
@@ -72,12 +72,12 @@ class ExteriorFilletTest(ScadTestCase):
         self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
 
         # Negative radius.
-        profile = ExteriorFillet(radius=-5.0, side=2)
+        profile = Fillet(radius=-5.0, side=2)
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
         self.assertAlmostEqual(5.0, profile.offset2(inner_angle=45.0), places=4)
 
         # Zero radius.
-        profile = ExteriorFillet(radius=0.0, side=2)
+        profile = Fillet(radius=0.0, side=2)
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
         self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
 
@@ -91,10 +91,10 @@ class ExteriorFilletTest(ScadTestCase):
         body = Polygon(points=[Vector2.origin, Vector2(2, 20), Vector2(18, 20), Vector2(20, 0)],
                        extend_sides_by_eps={1})
 
-        profiles = [ExteriorFillet(radius=5.0, side=2),
-                    ExteriorFillet(radius=5.0, side=1),
-                    ExteriorFillet(radius=5.0, side=2),
-                    ExteriorFillet(radius=5.0, side=1)]
+        profiles = [Fillet(radius=5.0, side=2),
+                    Fillet(radius=5.0, side=1),
+                    Fillet(radius=5.0, side=2),
+                    Fillet(radius=5.0, side=1)]
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
@@ -130,10 +130,10 @@ class ExteriorFilletTest(ScadTestCase):
         body = Polygon(points=[Vector2.origin, Vector2(2, 20), Vector2(18, 20), Vector2(20, 0)],
                        extend_sides_by_eps={1})
 
-        profiles = [ExteriorFillet(radius=-5.0, side=2),
-                    ExteriorFillet(radius=-5.0, side=1),
-                    ExteriorFillet(radius=-5.0, side=2),
-                    ExteriorFillet(radius=-5.0, side=1)]
+        profiles = [Fillet(radius=-5.0, side=2),
+                    Fillet(radius=-5.0, side=1),
+                    Fillet(radius=-5.0, side=2),
+                    Fillet(radius=-5.0, side=1)]
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
@@ -169,10 +169,10 @@ class ExteriorFilletTest(ScadTestCase):
         body = Polygon(points=[Vector2.origin, Vector2(2, 20), Vector2(18, 20), Vector2(20, 0)],
                        extend_sides_by_eps={1})
 
-        profiles = [ExteriorFillet(radius=0.0, side=2),
-                    ExteriorFillet(radius=0.0, side=1),
-                    ExteriorFillet(radius=0.0, side=2),
-                    ExteriorFillet(radius=0.0, side=1)]
+        profiles = [Fillet(radius=0.0, side=2),
+                    Fillet(radius=0.0, side=1),
+                    Fillet(radius=0.0, side=2),
+                    Fillet(radius=0.0, side=1)]
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
