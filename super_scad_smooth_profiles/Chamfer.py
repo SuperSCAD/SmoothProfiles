@@ -1,15 +1,17 @@
 import math
+from typing import List, Tuple
 
-from super_scad.scad.ScadSingleChildParent import ScadSingleChildParent
+from super_scad.scad.Context import Context
 from super_scad.scad.ScadWidget import ScadWidget
-from super_scad_smooth_profile.SmoothProfile import SmoothProfile
+from super_scad.type import Vector2
+from super_scad_smooth_profile.SmoothProfile3D import SmoothProfile3D
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
 from super_scad_smooth_profiles.ExteriorChamferWidget import ExteriorChamferWidget
 from super_scad_smooth_profiles.InteriorChamferWidget import InteriorChamferWidget
 
 
-class Chamfer(SmoothProfile):
+class Chamfer(SmoothProfile3D):
     """
     A profile that produces exterior chamfer smoothing profile widgets.
     """
@@ -41,6 +43,30 @@ class Chamfer(SmoothProfile):
         """
         The edge on which the exterior chamfer must be applied. 
         """
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def is_external(self) -> bool:
+        """
+        Returns whether the fillet is an external fillet.
+        """
+        return self._side is not None
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def is_internal(self) -> bool:
+        """
+        Returns whether the fillet is an internal fillet.
+        """
+        return self._side is None
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def side(self) -> int | None:
+        """
+        Returns the edge on which the exterior fillet must be applied.
+        """
+        return self._side
 
     # ------------------------------------------------------------------------------------------------------------------
     def skew_height(self, *, inner_angle: float) -> float:
@@ -81,6 +107,14 @@ class Chamfer(SmoothProfile):
         outer_angle = 180.0 - inner_angle
 
         return 2.0 * self._skew_height * math.tan(math.radians(0.5 * outer_angle))
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def convexity(self) -> int | None:
+        """
+        Return the convexity of the profile.
+        """
+        return 2
 
     # ------------------------------------------------------------------------------------------------------------------
     def offset1(self, *, inner_angle: float) -> float:
@@ -135,29 +169,97 @@ class Chamfer(SmoothProfile):
         raise ValueError(f'Side must be 1 or 2, got {self._side}.')
 
     # ------------------------------------------------------------------------------------------------------------------
-    def create_smooth_profile(self, *, params: SmoothProfileParams, child: ScadWidget) -> ScadSingleChildParent:
+    def create_smooth_profiles(self, *, params: SmoothProfileParams) -> Tuple[ScadWidget | None, ScadWidget | None]:
         """
         Returns a smoothing profile widget creating a chamfer.
 
         :param params: The parameters for the smooth profile widget.
-        :param child: The child object on which the smoothing must be applied.
         """
-        if self._side is None:
-            return InteriorChamferWidget(skew_length=self._skew_length,
-                                         skew_height=self._skew_height,
-                                         inner_angle=params.inner_angle,
-                                         normal_angle=params.normal_angle,
-                                         position=params.position,
-                                         child=child)
+        if params.inner_angle == 180.0 or self._skew_height == 0.0 or self._skew_length == 0.0:
+            return None, None
 
-        return ExteriorChamferWidget(skew_length=self._skew_length,
-                                     skew_height=self._skew_height,
-                                     side=self._side,
-                                     inner_angle=params.inner_angle,
-                                     normal_angle=params.normal_angle,
-                                     position=params.position,
-                                     side1_is_extended_by_eps=params.side1_is_extended_by_eps,
-                                     side2_is_extended_by_eps=params.side2_is_extended_by_eps,
-                                     child=child)
+        if self._side is None:
+            widget = InteriorChamferWidget(skew_length=self._skew_length,
+                                           skew_height=self._skew_height,
+                                           inner_angle=params.inner_angle,
+                                           normal_angle=params.normal_angle,
+                                           position=params.position)
+
+            if params.inner_angle < 180.0:
+                return widget, None
+
+            return None, widget
+
+        widget = ExteriorChamferWidget(skew_length=self._skew_length,
+                                       skew_height=self._skew_height,
+                                       side=self._side,
+                                       inner_angle=params.inner_angle,
+                                       normal_angle=params.normal_angle,
+                                       position=params.position,
+                                       edge1_is_extended_by_eps=params.edge1_is_extended_by_eps,
+                                       edge2_is_extended_by_eps=params.edge2_is_extended_by_eps)
+
+        return None, widget
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def create_polygon(self, *, context: Context, params: SmoothProfileParams) -> List[Vector2]:
+        """
+        Returns the profile as a polygon.
+
+        :param context: The build context.
+        :param params: The parameters for the smooth profile widget.
+        """
+        if params.inner_angle == 180.0 or self._skew_height == 0.0 or self._skew_length == 0.0:
+            return [params.position]
+
+        if params.inner_angle < 180.0:
+            if self._side is None:
+                return self._create_polygon(context, params.inner_angle, params.normal_angle, params.position)
+
+            if self._side == 1:
+                return self._create_polygon(context,
+                                            180.0 - params.inner_angle,
+                                            params.normal_angle - 90.0,
+                                            params.position)
+
+            if self._side == 2:
+                return self._create_polygon(context,
+                                            180.0 - params.inner_angle,
+                                            params.normal_angle + 90.0,
+                                            params.position)
+
+        if params.inner_angle > 180.0:
+            return self._create_polygon(context,
+                                        360.0 - params.inner_angle,
+                                        params.normal_angle - 180.0,
+                                        params.position)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def _create_polygon(self,
+                        context: Context,
+                        inner_angle: float,
+                        normal_angle: float,
+                        position: Vector2) -> List[Vector2]:
+        """
+        Returns the profile as a polygon.
+
+        :param context: The build context.
+        :param inner_angle: The inner angle of the node.
+        :param normal_angle: The normal angle of the node.
+        :param position: The position of the node.
+        """
+        if self._skew_height is not None:
+            skew_height = self._skew_height
+            skew_length = 2.0 * self._skew_height * math.tan(math.radians(0.5 * inner_angle))
+        else:
+            skew_height = 0.5 * self._skew_length / math.tan(math.radians(0.5 * inner_angle))
+            skew_length = self._skew_length
+
+        p1 = position + \
+             Vector2.from_polar_coordinates(skew_height, normal_angle) + \
+             Vector2.from_polar_coordinates(0.5 * skew_length, normal_angle - 90.0)
+        p2 = p1 + Vector2.from_polar_coordinates(skew_length, normal_angle + 90.0)
+
+        return [p1, p2]
 
 # ----------------------------------------------------------------------------------------------------------------------

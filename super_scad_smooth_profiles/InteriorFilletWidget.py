@@ -1,20 +1,20 @@
 import math
 
 from super_scad.boolean.Difference import Difference
-from super_scad.boolean.Union import Union
+from super_scad.boolean.Empty import Empty
 from super_scad.d2.Circle import Circle
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
-from super_scad.scad.ScadSingleChildParent import ScadSingleChildParent
 from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.transformation.Position2D import Position2D
 from super_scad.transformation.Translate2D import Translate2D
 from super_scad.type import Vector2
 from super_scad.type.Angle import Angle
+from super_scad.util.Radius2Sides4n import Radius2Sides4n
 from super_scad_circle_sector.CircleSector import CircleSector
 
 
-class InteriorFilletWidget(ScadSingleChildParent):
+class InteriorFilletWidget(ScadWidget):
     """
     Applies a rounding to edges at a node.
     """
@@ -25,8 +25,7 @@ class InteriorFilletWidget(ScadSingleChildParent):
                  radius: float,
                  inner_angle: float,
                  normal_angle: float,
-                 position: Vector2,
-                 child: ScadWidget):
+                 position: Vector2):
         """
         Object constructor.
 
@@ -34,9 +33,8 @@ class InteriorFilletWidget(ScadSingleChildParent):
         :param inner_angle: Inner angle of the corner.
         :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
                              the two vertices and with origin at the node.
-        :param child: The child object on which the fillet is applied.
         """
-        ScadSingleChildParent.__init__(self, args=locals(), child=child)
+        ScadWidget.__init__(self)
 
         self._radius: float = radius
         """
@@ -65,27 +63,29 @@ class InteriorFilletWidget(ScadSingleChildParent):
 
         :param context: The build context.
         """
+
+        Radius2Sides4n.r2sides4n(context, self._radius)
         if self._radius > 0.0 and self._inner_angle < 180.0:
             # The corner is convex.
             alpha = math.radians(self._inner_angle) / 2.0
             fillet = self._build_fillet_pos(alpha, 90.0)
 
-            return Difference(children=[self.child, fillet])
+            return fillet
 
         if self._radius > 0.0 and self._inner_angle > 180.0:
             # The corner is concave.
             alpha = math.radians(360.0 - self._inner_angle) / 2.0
             fillet = self._build_fillet_pos(alpha, -90.0)
 
-            return Union(children=[self.child, fillet])
+            return fillet
 
         if self._radius < 0.0:
             # Negative radius.
             fillet = self._build_fillet_neg()
 
-            return Union(children=[self.child, fillet])
+            return fillet
 
-        return self.child
+        return Empty()
 
     # ------------------------------------------------------------------------------------------------------------------
     def _build_fillet_pos(self,

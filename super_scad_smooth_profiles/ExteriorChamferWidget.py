@@ -1,16 +1,17 @@
 import math
+from typing import Any, Dict
 
-from super_scad.boolean.Union import Union
+from super_scad.boolean.Empty import Empty
 from super_scad.d2.Polygon import Polygon
+from super_scad.scad.ArgumentValidator import ArgumentValidator
 from super_scad.scad.Context import Context
-from super_scad.scad.ScadSingleChildParent import ScadSingleChildParent
 from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.transformation.Translate2D import Translate2D
 from super_scad.type import Vector2
 from super_scad.type.Angle import Angle
 
 
-class ExteriorChamferWidget(ScadSingleChildParent):
+class ExteriorChamferWidget(ScadWidget):
     """
     Applies an exterior chamfer to an edge at a node.
     """
@@ -24,9 +25,8 @@ class ExteriorChamferWidget(ScadSingleChildParent):
                  inner_angle: float,
                  normal_angle: float,
                  position: Vector2,
-                 side1_is_extended_by_eps: bool,
-                 side2_is_extended_by_eps: bool,
-                 child: ScadWidget):
+                 edge1_is_extended_by_eps: bool,
+                 edge2_is_extended_by_eps: bool):
         """
         Object constructor.
 
@@ -36,11 +36,10 @@ class ExteriorChamferWidget(ScadSingleChildParent):
         :param inner_angle: Inner angle between the vertices.
         :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
                              the two vertices and with origin at the node.
-        :param side1_is_extended_by_eps: Whether the first side is extended by eps.
-        :param side2_is_extended_by_eps: Whether the second side is extended by eps.
-        :param child: The child object on which the fillet is applied.
+        :param edge1_is_extended_by_eps: Whether the first side is extended by eps.
+        :param edge2_is_extended_by_eps: Whether the second side is extended by eps.
         """
-        ScadSingleChildParent.__init__(self, args=locals(), child=child)
+        ScadWidget.__init__(self)
 
         self._skew_length = skew_length
         """
@@ -72,25 +71,26 @@ class ExteriorChamferWidget(ScadSingleChildParent):
         The position of the node.
         """
 
-        self._side1_is_extended_by_eps = side1_is_extended_by_eps
+        self._edge1_is_extended_by_eps = edge1_is_extended_by_eps
         """
         Whether the first side is extended by eps.
         """
 
-        self._side2_is_extended_by_eps = side2_is_extended_by_eps
+        self._edge2_is_extended_by_eps = edge2_is_extended_by_eps
         """
         Whether the second side is extended by eps.
         """
 
-        self._validate_arguments()
+        self.__validate_arguments(locals())
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _validate_arguments(self) -> None:
+    @staticmethod
+    def __validate_arguments(args: Dict[str, Any]) -> None:
         """
         Validates the arguments supplied to the constructor of this profile.
         """
-        # admission = ArgumentAdmission(self._args)
-        # admission.validate_exclusive({'skew_length'}, {'skew_height'})
+        admission = ArgumentValidator(args)
+        admission.validate_exclusive({'skew_length'}, {'skew_height'})
 
     # ------------------------------------------------------------------------------------------------------------------
     @property
@@ -127,20 +127,20 @@ class ExteriorChamferWidget(ScadSingleChildParent):
             if self._side == 1:
                 polygon = self._build_polygon(self._normal_angle,
                                               True,
-                                              self._side2_is_extended_by_eps)
+                                              self._edge2_is_extended_by_eps)
 
-                return Union(children=[self.child, polygon])
+                return polygon
 
             if self._side == 2:
                 polygon = self._build_polygon(Angle.normalize(self._normal_angle - 180.0),
-                                              self._side1_is_extended_by_eps,
+                                              self._edge1_is_extended_by_eps,
                                               True)
 
-                return Union(children=[self.child, polygon])
+                return polygon
 
             raise ValueError(f'Side must be 1 or 2, got {self._side}.')
 
-        return self.child
+        return Empty()
 
     # ------------------------------------------------------------------------------------------------------------------
     def _build_polygon(self,

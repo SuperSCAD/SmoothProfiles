@@ -1,15 +1,19 @@
 import math
+from typing import List, Tuple
 
-from super_scad.scad.ScadSingleChildParent import ScadSingleChildParent
+from super_scad.scad.Context import Context
 from super_scad.scad.ScadWidget import ScadWidget
-from super_scad_smooth_profile.SmoothProfile import SmoothProfile
+from super_scad.type import Vector2
+from super_scad.type.Angle import Angle
+from super_scad.util.Radius2Sides4n import Radius2Sides4n
+from super_scad_smooth_profile.SmoothProfile3D import SmoothProfile3D
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
 from super_scad_smooth_profiles.ExteriorFilletWidget import ExteriorFilletWidget
 from super_scad_smooth_profiles.InteriorFilletWidget import InteriorFilletWidget
 
 
-class Fillet(SmoothProfile):
+class Fillet(SmoothProfile3D):
     """
     A profile that produces fillet smoothing profile widgets.
     """
@@ -32,6 +36,38 @@ class Fillet(SmoothProfile):
         """
         The edge on which the exterior fillet must be applied. 
         """
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def is_external(self) -> bool:
+        """
+        Returns whether the fillet is an external fillet.
+        """
+        return self._side is not None
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def is_internal(self) -> bool:
+        """
+        Returns whether the fillet is an internal fillet.
+        """
+        return self._side is None
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def side(self) -> int | None:
+        """
+        Returns the edge on which the exterior fillet must be applied.
+        """
+        return self._side
+
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def convexity(self) -> int | None:
+        """
+        Return the convexity of the profile.
+        """
+        return 2
 
     # ------------------------------------------------------------------------------------------------------------------
     def offset1(self, *, inner_angle: float) -> float:
@@ -135,27 +171,119 @@ class Fillet(SmoothProfile):
         raise ValueError(f'Side must be 1 or 2, got {self._side}.')
 
     # ------------------------------------------------------------------------------------------------------------------
-    def create_smooth_profile(self, *, params: SmoothProfileParams, child: ScadWidget) -> ScadSingleChildParent:
+    def create_smooth_profiles(self, *, params: SmoothProfileParams) -> Tuple[ScadWidget | None, ScadWidget | None]:
         """
-        Returns a smoothing profile widget creating a fillet.
+        Creates widget for creating fillet on an edge.
 
         :param params: The parameters for the smooth profile widget.
-        :param child: The child object on which the smoothing must be applied.
         """
-        if self._side is None:
-            return InteriorFilletWidget(radius=self._radius,
-                                        inner_angle=params.inner_angle,
-                                        normal_angle=params.normal_angle,
-                                        position=params.position,
-                                        child=child)
+        if self._radius == 0.0 or self._radius > 0.0 and params.inner_angle == 180.0:
+            negative, positive = None, None
 
-        return ExteriorFilletWidget(radius=self._radius,
-                                    side=self._side,
-                                    inner_angle=params.inner_angle,
-                                    normal_angle=params.normal_angle,
-                                    position=params.position,
-                                    side1_is_extended_by_eps=params.side1_is_extended_by_eps,
-                                    side2_is_extended_by_eps=params.side2_is_extended_by_eps,
-                                    child=child)
+        elif self._side is None:
+            # Interior profile between both edges.
+            widget = InteriorFilletWidget(radius=self._radius,
+                                          inner_angle=params.inner_angle,
+                                          normal_angle=params.normal_angle,
+                                          position=params.position)
+
+            if params.inner_angle < 180.0:
+                # Convex corner.
+                if self._radius > 0.0:
+                    negative, positive = widget, None
+                else:
+                    negative, positive = None, widget
+            else:
+                # Concave corner.
+                negative, positive = None, widget
+
+        else:
+            # Exterior profile on one edge.
+            widget = ExteriorFilletWidget(radius=self._radius,
+                                          side=self._side,
+                                          inner_angle=params.inner_angle,
+                                          normal_angle=params.normal_angle,
+                                          position=params.position,
+                                          edge1_is_extended_by_eps=params.edge1_is_extended_by_eps,
+                                          edge2_is_extended_by_eps=params.edge2_is_extended_by_eps)
+
+            negative, positive = None, widget
+
+        return negative, positive
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def create_polygon(self, *, context: Context, params: SmoothProfileParams) -> List[Vector2]:
+        """
+        Returns the profile as a polygon.
+
+        :param context: The build context.
+        :param params: The parameters for the smooth profile widget.
+        """
+        if self._radius == 0.0 or self._radius > 0.0 and params.inner_angle == 180.0:
+            return [params.position]
+
+        if params.inner_angle < 180.0:
+            if self._side is None:
+                return self._create_polygon(context, params.inner_angle, params.normal_angle, params.position)
+
+            if self._side == 1:
+                return self._create_polygon(context,
+                                            180.0 - params.inner_angle,
+                                            params.normal_angle - 90.0,
+                                            params.position)
+
+            if self._side == 2:
+                return self._create_polygon(context,
+                                            180.0 - params.inner_angle,
+                                            params.normal_angle + 90.0,
+                                            params.position)
+
+        if params.inner_angle > 180.0:
+            return self._create_polygon(context,
+                                        360.0 - params.inner_angle,
+                                        params.normal_angle - 180.0,
+                                        params.position)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def _create_polygon(self,
+                        context: Context,
+                        inner_angle: float,
+                        normal_angle: float,
+                        position: Vector2) -> List[Vector2]:
+        """
+        Returns the profile as a polygon.
+
+        :param context: The build context.
+        :param inner_angle: The inner angle of the node.
+        :param normal_angle: The normal angle of the node.
+        :param position: The position of the node.
+        """
+        nodes = []
+
+        inner_angle = Angle.normalize(inner_angle)
+        normal_angle = Angle.normalize(normal_angle)
+        rotation = Angle.normalize(180.0 - inner_angle)
+
+        # Carefully align nodes with fn4n=True in InteriorFilletWidget._build_fillet_pos()
+        fn = math.floor(Radius2Sides4n.r2sides4n(context, self._radius))
+        steps = int(fn * rotation / 360.0)
+        step_angle = 360.0 / fn
+
+        alpha = math.radians(0.5 * inner_angle)
+        center = position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha), normal_angle)
+
+        nodes.append(center + Vector2.from_polar_coordinates(-self._radius, normal_angle + 0.5 * rotation))
+        if steps % 2 == 0:
+            angle = normal_angle - 180.0 + 0.5 * steps * step_angle
+            n = steps + 1
+        else:
+            angle = normal_angle - 180.0 + 0.5 * (steps - 1) * step_angle
+            n = steps
+        for i in range(n):
+            nodes.append(center + Vector2.from_polar_coordinates(self._radius, angle))
+            angle -= step_angle
+        nodes.append(center + Vector2.from_polar_coordinates(-self._radius, normal_angle - 0.5 * rotation))
+
+        return nodes
 
 # ----------------------------------------------------------------------------------------------------------------------

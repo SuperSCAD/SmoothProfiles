@@ -1,3 +1,5 @@
+from super_scad.boolean.Difference import Difference
+from super_scad.boolean.Union import Union
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
 from super_scad.scad.Scad import Scad
@@ -109,10 +111,13 @@ class ExteriorFilletTest(ScadTestCase):
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
                                          position=nodes[index],
-                                         side1_is_extended_by_eps=extend_side_by_eps1,
-                                         side2_is_extended_by_eps=extend_side_by_eps2)
-
-            body = profiles[index].create_smooth_profile(params=params, child=body)
+                                         edge1_is_extended_by_eps=extend_side_by_eps1,
+                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+            negative, positive = profiles[index].create_smooth_profiles(params=params)
+            if negative:
+                body = Difference(children=[body, negative])
+            if positive:
+                body = Union(children=[body, positive])
 
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)
@@ -148,10 +153,13 @@ class ExteriorFilletTest(ScadTestCase):
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
                                          position=nodes[index],
-                                         side1_is_extended_by_eps=extend_side_by_eps1,
-                                         side2_is_extended_by_eps=extend_side_by_eps2)
-
-            body = profiles[index].create_smooth_profile(params=params, child=body)
+                                         edge1_is_extended_by_eps=extend_side_by_eps1,
+                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+            negative, positive = profiles[index].create_smooth_profiles(params=params)
+            if negative:
+                body = Difference(children=[body, negative])
+            if positive:
+                body = Union(children=[body, positive])
 
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)
@@ -187,10 +195,13 @@ class ExteriorFilletTest(ScadTestCase):
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
                                          position=nodes[index],
-                                         side1_is_extended_by_eps=extend_side_by_eps1,
-                                         side2_is_extended_by_eps=extend_side_by_eps2)
-
-            body = profiles[index].create_smooth_profile(params=params, child=body)
+                                         edge1_is_extended_by_eps=extend_side_by_eps1,
+                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+            negative, positive = profiles[index].create_smooth_profiles(params=params)
+            if negative:
+                body = Difference(children=[body, negative])
+            if positive:
+                body = Union(children=[body, positive])
 
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)

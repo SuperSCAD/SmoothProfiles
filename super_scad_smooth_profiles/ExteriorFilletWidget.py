@@ -1,20 +1,20 @@
 import math
 
 from super_scad.boolean.Difference import Difference
-from super_scad.boolean.Union import Union
+from super_scad.boolean.Empty import Empty
 from super_scad.d2.Circle import Circle
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
-from super_scad.scad.ScadSingleChildParent import ScadSingleChildParent
 from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.transformation.Position2D import Position2D
 from super_scad.transformation.Translate2D import Translate2D
 from super_scad.type import Vector2
 from super_scad.type.Angle import Angle
+from super_scad.util.Radius2Sides4n import Radius2Sides4n
 from super_scad_circle_sector.CircleSector import CircleSector
 
 
-class ExteriorFilletWidget(ScadSingleChildParent):
+class ExteriorFilletWidget(ScadWidget):
     """
     Applies an exterior fillet to an edge at a node.
     """
@@ -27,9 +27,8 @@ class ExteriorFilletWidget(ScadSingleChildParent):
                  inner_angle: float,
                  normal_angle: float,
                  position: Vector2,
-                 side1_is_extended_by_eps: bool,
-                 side2_is_extended_by_eps: bool,
-                 child: ScadWidget):
+                 edge1_is_extended_by_eps: bool,
+                 edge2_is_extended_by_eps: bool):
         """
         Object constructor.
 
@@ -38,11 +37,10 @@ class ExteriorFilletWidget(ScadSingleChildParent):
         :param inner_angle: Inner angle of the vertices.
         :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
                              the two vertices and with origin at the node.
-        :param side1_is_extended_by_eps: Whether the first side is extended by eps.
-        :param side2_is_extended_by_eps: Whether the second side is extended by eps.
-        :param child: The child object on which the fillet is applied.
+        :param edge1_is_extended_by_eps: Whether the first side is extended by eps.
+        :param edge2_is_extended_by_eps: Whether the second side is extended by eps.
         """
-        ScadSingleChildParent.__init__(self, args=locals(), child=child)
+        ScadWidget.__init__(self)
 
         self._radius: float = radius
         """
@@ -69,12 +67,12 @@ class ExteriorFilletWidget(ScadSingleChildParent):
         The position of the node.
         """
 
-        self._side1_is_extended_by_eps = side1_is_extended_by_eps
+        self._edge1_is_extended_by_eps = edge1_is_extended_by_eps
         """
         Whether the first side is extended by eps.
         """
 
-        self._side2_is_extended_by_eps = side2_is_extended_by_eps
+        self._edge2_is_extended_by_eps = edge2_is_extended_by_eps
         """
         Whether the second side is extended by eps.
         """
@@ -86,49 +84,42 @@ class ExteriorFilletWidget(ScadSingleChildParent):
 
         :param context: The build context.
         """
+        Radius2Sides4n.r2sides4n(context, self._radius)
         if self._side == 1:
             if self._radius > 0.0:
                 # The corner is concave.
                 alpha = math.radians(180 - self._inner_angle) / 2.0
 
-                fillet = self._build_fillet_pos(alpha,
-                                                0.0,
-                                                True,
-                                                self._side2_is_extended_by_eps)
-
-                return Union(children=[self.child, fillet])
+                return self._build_fillet_pos(alpha,
+                                              0.0,
+                                              True,
+                                              self._edge2_is_extended_by_eps)
 
             if self._radius < 0.0:
                 # The corner is concave.
-                fillet = self._build_fillet_neg(0.0,
-                                                self._side2_is_extended_by_eps,
-                                                True)
-
-                return Union(children=[self.child, fillet])
+                return self._build_fillet_neg(0.0,
+                                              self._edge2_is_extended_by_eps,
+                                              True)
 
         elif self._side == 2:
             if self._radius > 0.0:
                 # The corner is concave.
                 alpha = math.radians(180 - self._inner_angle) / 2.0
 
-                fillet = self._build_fillet_pos(alpha,
-                                                180.0,
-                                                self._side1_is_extended_by_eps,
-                                                True)
-
-                return Union(children=[self.child, fillet])
+                return self._build_fillet_pos(alpha,
+                                              180.0,
+                                              self._edge1_is_extended_by_eps,
+                                              True)
 
             if self._radius < 0.0:
                 # The corner is concave.
-                fillet = self._build_fillet_neg(180.0,
-                                                True,
-                                                self._side1_is_extended_by_eps)
-
-                return Union(children=[self.child, fillet])
+                return self._build_fillet_neg(180.0,
+                                              True,
+                                              self._edge1_is_extended_by_eps)
         else:
             raise ValueError(f'Side must be 1 or 2, got {self._side}.')
 
-        return self.child
+        return Empty()
 
     # ------------------------------------------------------------------------------------------------------------------
     def _build_fillet_pos(self,

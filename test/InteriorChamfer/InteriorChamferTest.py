@@ -1,4 +1,5 @@
-from super_scad.boolean.Empty import Empty
+from super_scad.boolean.Difference import Difference
+from super_scad.boolean.Union import Union
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
 from super_scad.scad.Scad import Scad
@@ -14,6 +15,14 @@ class InteriorChamferTest(ScadTestCase):
     """
     Testcases for chamfers.
     """
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def test_convexity(self):
+        """
+        Test the convexity of a chamfer.
+        """
+        profile = Chamfer(skew_length=5.0)
+        self.assertEqual(profile.convexity, 2)
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_sizes(self):
@@ -97,26 +106,24 @@ class InteriorChamferTest(ScadTestCase):
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
 
-        widget = profile.create_smooth_profile(params=SmoothProfileParams(inner_angle=inner_angle,
-                                                                          normal_angle=0.0,
-                                                                          position=Vector2.origin),
-                                               child=Empty())
-        self.assertIsInstance(widget, InteriorChamferWidget)
-        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), widget.skew_height)
-        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), widget.skew_length)
+        negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
+                                                                                       normal_angle=0.0,
+                                                                                       position=Vector2.origin))
+        self.assertIsInstance(negative, InteriorChamferWidget)
+        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), negative.skew_height)
+        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), negative.skew_length)
 
         # Concave corner.
         inner_angle = 315.0
         self.assertAlmostEqual(profile.skew_height(inner_angle=45.0), profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(profile.skew_length(inner_angle=45.0), profile.skew_length(inner_angle=inner_angle))
 
-        widget = profile.create_smooth_profile(params=SmoothProfileParams(inner_angle=inner_angle,
-                                                                          normal_angle=0.0,
-                                                                          position=Vector2.origin),
-                                               child=Empty())
-        self.assertIsInstance(widget, InteriorChamferWidget)
-        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), widget.skew_height)
-        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), widget.skew_length)
+        negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
+                                                                                       normal_angle=0.0,
+                                                                                       position=Vector2.origin))
+        self.assertIsInstance(positive, InteriorChamferWidget)
+        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), positive.skew_height)
+        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), positive.skew_length)
 
         # Oblige angle.
         inner_angle = 135.0
@@ -129,13 +136,12 @@ class InteriorChamferTest(ScadTestCase):
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
 
-        widget = profile.create_smooth_profile(params=SmoothProfileParams(inner_angle=inner_angle,
-                                                                          normal_angle=0.0,
-                                                                          position=Vector2.origin),
-                                               child=Empty())
-        self.assertIsInstance(widget, InteriorChamferWidget)
-        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), widget.skew_height)
-        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), widget.skew_length)
+        negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
+                                                                                       normal_angle=0.0,
+                                                                                       position=Vector2.origin))
+        self.assertIsInstance(negative, InteriorChamferWidget)
+        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), negative.skew_height)
+        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), negative.skew_length)
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_convex(self) -> None:
@@ -151,10 +157,14 @@ class InteriorChamferTest(ScadTestCase):
         normal_angles = body.normal_angles(context)
         nodes = body.primary
         for index in range(len(nodes)):
-            body = profile.create_smooth_profile(params=SmoothProfileParams(inner_angle=inner_angles[index],
-                                                                            normal_angle=normal_angles[index],
-                                                                            position=nodes[index]),
-                                                 child=body)
+            params = SmoothProfileParams(inner_angle=inner_angles[index],
+                                         normal_angle=normal_angles[index],
+                                         position=nodes[index])
+            negative, positive = profile.create_smooth_profiles(params=params)
+            if negative:
+                body = Difference(children=[body, negative])
+            if positive:
+                body = Union(children=[body, positive])
 
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)
@@ -174,16 +184,28 @@ class InteriorChamferTest(ScadTestCase):
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
         nodes = body.primary
-        body = InteriorChamferWidget(skew_length=5.0,
-                                     inner_angle=inner_angles[0],
-                                     normal_angle=normal_angles[0],
-                                     position=nodes[0],
-                                     child=body)
-        body = InteriorChamferWidget(skew_length=5.0,
-                                     inner_angle=inner_angles[2],
-                                     normal_angle=normal_angles[2],
-                                     position=nodes[2],
-                                     child=body)
+
+        profile = Chamfer(skew_length=5.0)
+
+        index = 0
+        params = SmoothProfileParams(inner_angle=inner_angles[index],
+                                     normal_angle=normal_angles[index],
+                                     position=nodes[index])
+        negative, positive = profile.create_smooth_profiles(params=params)
+        if negative:
+            body = Difference(children=[body, negative])
+        if positive:
+            body = Union(children=[body, positive])
+
+        index = 2
+        params = SmoothProfileParams(inner_angle=inner_angles[index],
+                                     normal_angle=normal_angles[index],
+                                     position=nodes[index])
+        negative, positive = profile.create_smooth_profiles(params=params)
+        if negative:
+            body = Difference(children=[body, negative])
+        if positive:
+            body = Union(children=[body, positive])
 
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)
@@ -197,18 +219,25 @@ class InteriorChamferTest(ScadTestCase):
         Test chamfer for concave corners with an oblique angle.
         """
         context = Context()
-        scad = Scad(context=context)
         body = Polygon(points=[Vector2(0, 10), Vector2(20, 0), Vector2(0, 5), Vector2(-20, 0)])
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
         nodes = body.primary
-        body = InteriorChamferWidget(skew_length=5.0,
-                                     inner_angle=inner_angles[2],
-                                     normal_angle=normal_angles[2],
-                                     position=nodes[2],
-                                     child=body)
 
+        profile = Chamfer(skew_length=5.0)
+
+        index = 2
+        params = SmoothProfileParams(inner_angle=inner_angles[index],
+                                     normal_angle=normal_angles[index],
+                                     position=nodes[index])
+        negative, positive = profile.create_smooth_profiles(params=params)
+        if negative:
+            body = Difference(children=[body, negative])
+        if positive:
+            body = Union(children=[body, positive])
+
+        scad = Scad(context=context)
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)
         actual = path_actual.read_text()
@@ -221,22 +250,31 @@ class InteriorChamferTest(ScadTestCase):
         Test fillet node with an inner angle of one hundred and eighty degrees.
         """
         context = Context()
-        scad = Scad(context=context)
+
         body = Polygon(points=[Vector2.origin, Vector2(0, 20), Vector2(10, 20), Vector2(20, 20), Vector2(20.0, 0.0)])
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
         nodes = body.primary
 
+        profile = Chamfer(skew_length=5.0)
+
         index = 2
         self.assertAlmostEqual(inner_angles[index], 180.0)
+        self.assertTrue(profile.is_internal)
+        self.assertFalse(profile.is_external)
+        self.assertFalse(profile.side)
 
-        body = InteriorChamferWidget(skew_length=5.0,
-                                     inner_angle=inner_angles[index],
+        params = SmoothProfileParams(inner_angle=inner_angles[index],
                                      normal_angle=normal_angles[index],
-                                     position=nodes[index],
-                                     child=body)
+                                     position=nodes[index])
+        negative, positive = profile.create_smooth_profiles(params=params)
+        if negative:
+            body = Difference(children=[body, negative])
+        if positive:
+            body = Union(children=[body, positive])
 
+        scad = Scad(context=context)
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)
         actual = path_actual.read_text()

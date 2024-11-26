@@ -1,16 +1,16 @@
 import math
+from typing import Any, Dict
 
-from super_scad.boolean.Difference import Difference
-from super_scad.boolean.Union import Union
+from super_scad.boolean.Empty import Empty
 from super_scad.d2.Polygon import Polygon
+from super_scad.scad.ArgumentValidator import ArgumentValidator
 from super_scad.scad.Context import Context
-from super_scad.scad.ScadSingleChildParent import ScadSingleChildParent
 from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.type import Vector2
 from super_scad.type.Angle import Angle
 
 
-class InteriorChamferWidget(ScadSingleChildParent):
+class InteriorChamferWidget(ScadWidget):
     """
     Applies a chamfer to vertices at a node.
     """
@@ -22,8 +22,7 @@ class InteriorChamferWidget(ScadSingleChildParent):
                  skew_height: float | None = None,
                  inner_angle: float,
                  normal_angle: float,
-                 position: Vector2,
-                 child: ScadWidget):
+                 position: Vector2):
         """
         Object constructor.
 
@@ -32,9 +31,8 @@ class InteriorChamferWidget(ScadSingleChildParent):
         :param inner_angle: Inner angle between the vertices.
         :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
                              the two vertices and with origin at the node.
-        :param child: The child object on which the fillet is applied.
         """
-        ScadSingleChildParent.__init__(self, args=locals(), child=child)
+        ScadWidget.__init__(self)
 
         self._skew_length = skew_length
         """
@@ -61,15 +59,16 @@ class InteriorChamferWidget(ScadSingleChildParent):
         The position of the node.
         """
 
-        self._validate_arguments()
+        self.__validate_arguments(locals())
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _validate_arguments(self) -> None:
+    @staticmethod
+    def __validate_arguments(args: Dict[str, Any]) -> None:
         """
         Validates the arguments supplied to the constructor of this profile.
         """
-        # admission = ArgumentAdmission(self._args)
-        # admission.validate_exclusive({'skew_length'}, {'skew_height'})
+        validator = ArgumentValidator(args)
+        validator.validate_exclusive({'skew_length'}, {'skew_height'})
 
     # ------------------------------------------------------------------------------------------------------------------
     @property
@@ -108,17 +107,13 @@ class InteriorChamferWidget(ScadSingleChildParent):
         """
         if self._inner_angle < 180.0:
             # The corner is convex.
-            polygon = self._build_polygon(self._normal_angle)
-
-            return Difference(children=[self.child, polygon])
+            return self._build_polygon(self._normal_angle)
 
         if self._inner_angle > 180.0:
             # The corner is concave.
-            polygon = self._build_polygon(Angle.normalize(self._normal_angle - 180.0))
+            return self._build_polygon(Angle.normalize(self._normal_angle - 180.0))
 
-            return Union(children=[self.child, polygon])
-
-        return self.child
+        return Empty()
 
     # ------------------------------------------------------------------------------------------------------------------
     def _build_polygon(self, normal_angle: float) -> ScadWidget:
