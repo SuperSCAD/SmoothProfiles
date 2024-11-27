@@ -462,7 +462,7 @@ class FilletTest(ScadTestCase):
         self.assertFalse(profile.is_external)
         self.assertIsNone(profile.side)
 
-        inner_angle = 300.0
+        inner_angle = 305.0
         normal_angle = 36.1
         position = Vector2.origin
         params = SmoothProfileParams(inner_angle=inner_angle,

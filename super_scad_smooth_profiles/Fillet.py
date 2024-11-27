@@ -239,10 +239,10 @@ class Fillet(SmoothProfile3D):
                                             params.position)
 
         if params.inner_angle > 180.0:
-            return self._create_polygon(context,
-                                        360.0 - params.inner_angle,
-                                        params.normal_angle - 180.0,
-                                        params.position)
+            return list(reversed(self._create_polygon(context,
+                                                      360.0 - params.inner_angle,
+                                                      params.normal_angle - 180.0,
+                                                      params.position)))
 
     # ------------------------------------------------------------------------------------------------------------------
     def _create_polygon(self,
