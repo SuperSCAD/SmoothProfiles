@@ -158,6 +158,6 @@ class ExteriorChamferWidget(ScadWidget):
 
         return Translate2D(vector=self._position,
                            child=Polygon(points=[Vector2.origin, p2, p3],
-                                         extend_sides_by_eps=[extent_by_eps0, False, extent_by_eps2]))
+                                         extend_by_eps_sides=[extent_by_eps0, False, extent_by_eps2]))
 
 # ----------------------------------------------------------------------------------------------------------------------

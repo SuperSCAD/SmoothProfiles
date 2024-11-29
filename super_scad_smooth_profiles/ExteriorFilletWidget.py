@@ -138,7 +138,7 @@ class ExteriorFilletWidget(ScadWidget):
         x = self._radius * math.cos(alpha)
         y = self._radius * math.cos(alpha) ** 2 / math.sin(alpha)
         polygon = Polygon(points=[Vector2.origin, Vector2(x, -y), Vector2(-x, -y)],
-                          extend_sides_by_eps=[extent_by_eps0, False, extent_by_eps2],
+                          extend_by_eps_sides=[extent_by_eps0, False, extent_by_eps2],
                           convexity=2)
         circle = Circle(radius=self._radius, fn4n=True)
         fillet = Difference(children=[polygon,
@@ -166,7 +166,7 @@ class ExteriorFilletWidget(ScadWidget):
                           child=CircleSector(start_angle=self._normal_angle + 0.5 * self._inner_angle + 180.0,
                                              end_angle=self._normal_angle - 0.5 * self._inner_angle,
                                              radius=-self._radius,
-                                             extend_legs_by_eps=(extent_by_eps1, extent_by_eps2),
+                                             extend_by_eps_legs=(extent_by_eps1, extent_by_eps2),
                                              fn4n=True))
 
 # ----------------------------------------------------------------------------------------------------------------------

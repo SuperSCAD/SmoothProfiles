@@ -163,7 +163,7 @@ class ExteriorChamferTest(ScadTestCase):
         scad = Scad(context=context)
         points = [Vector2.origin, Vector2(2, 20), Vector2(18, 20), Vector2(20, 0)]
         body = Polygon(points=points,
-                       extend_sides_by_eps={1})
+                       extend_by_eps_sides={1})
 
         profiles = [Chamfer(skew_length=5.0, side=2),
                     Chamfer(skew_height=3.0, side=1),
@@ -172,13 +172,13 @@ class ExteriorChamferTest(ScadTestCase):
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
-        extend_sides_by_eps = body.extend_sides_by_eps
+        extend_by_eps_sides = body.extend_by_eps_sides
         nodes = body.primary
 
         n = len(nodes)
         for index in range(n):
-            extend_side_by_eps1 = (index - 1) % n in extend_sides_by_eps
-            extend_side_by_eps2 = index in extend_sides_by_eps
+            extend_side_by_eps1 = (index - 1) % n in extend_by_eps_sides
+            extend_side_by_eps2 = index in extend_by_eps_sides
 
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
@@ -207,7 +207,7 @@ class ExteriorChamferTest(ScadTestCase):
         scad = Scad(context=context)
         points = [Vector2.origin, Vector2(2, 20), Vector2(18, 20), Vector2(20, 0)]
         body = Polygon(points=points,
-                       extend_sides_by_eps={1})
+                       extend_by_eps_sides={1})
 
         factories = [Chamfer(skew_length=0.0, side=2),
                      Chamfer(skew_height=0.0, side=1),
@@ -216,13 +216,13 @@ class ExteriorChamferTest(ScadTestCase):
 
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
-        extend_sides_by_eps = body.extend_sides_by_eps
+        extend_by_eps_sides = body.extend_by_eps_sides
         nodes = body.primary
 
         n = len(nodes)
         for index in range(n):
-            extend_side_by_eps1 = (index - 1) % n in extend_sides_by_eps
-            extend_side_by_eps2 = index in extend_sides_by_eps
+            extend_side_by_eps1 = (index - 1) % n in extend_by_eps_sides
+            extend_side_by_eps2 = index in extend_by_eps_sides
 
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
