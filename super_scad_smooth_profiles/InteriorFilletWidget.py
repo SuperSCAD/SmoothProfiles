@@ -11,7 +11,7 @@ from super_scad.transformation.Translate2D import Translate2D
 from super_scad.type import Vector2
 from super_scad.type.Angle import Angle
 from super_scad.util.Radius2Sides4n import Radius2Sides4n
-from super_scad_circle_sector.CircleSector import CircleSector
+from super_scad_circle_plus.CircleSector import CircleSector
 
 
 class InteriorFilletWidget(ScadWidget):

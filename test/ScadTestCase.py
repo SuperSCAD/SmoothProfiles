@@ -10,7 +10,7 @@ from super_scad.transformation.Paint import Paint
 from super_scad.transformation.Translate2D import Translate2D
 from super_scad.type import Vector2
 from super_scad.type.Color import Color
-from super_scad_circle_sector.CircleSector import CircleSector
+from super_scad_circle_plus.CircleSector import CircleSector
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
 
