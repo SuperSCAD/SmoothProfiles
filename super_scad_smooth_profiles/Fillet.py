@@ -233,7 +233,11 @@ class Fillet(SmoothProfile3D):
                                             -1.0)
 
             if self._side is None and self._radius < 0.0:
-                return [params.position]
+                return self._create_polygon(context,
+                                            params.position,
+                                            params.normal_angle - 0.5 * params.inner_angle,
+                                            360.0 - params.inner_angle,
+                                            -1.0)
 
             if self._side == 1 and self._radius > 0.0:
                 angle_rotation = params.inner_angle
@@ -274,14 +278,22 @@ class Fillet(SmoothProfile3D):
                                             -1.0)
 
         if params.inner_angle > 180.0:
-            alpha = math.radians(0.5 * params.inner_angle - 180.0)
-            position = params.position + Vector2.from_polar(self._radius / math.sin(alpha),
-                                                            params.normal_angle)
-            return self._create_polygon(context,
-                                        position,
-                                        params.normal_angle - 0.5 * params.inner_angle + 90.0,
-                                        params.inner_angle - 180.0,
-                                        1.0)
+            if self._side is None and self._radius > 0.0:
+                alpha = math.radians(0.5 * params.inner_angle - 180.0)
+                position = params.position + Vector2.from_polar(self._radius / math.sin(alpha),
+                                                                params.normal_angle)
+                return self._create_polygon(context,
+                                            position,
+                                            params.normal_angle - 0.5 * params.inner_angle + 90.0,
+                                            params.inner_angle - 180.0,
+                                            1.0)
+
+            if self._side is None and self._radius < 0.0:
+                return self._create_polygon(context,
+                                            params.position,
+                                            params.normal_angle - 0.5 * params.inner_angle,
+                                            360.0 - params.inner_angle,
+                                            -1.0)
 
         raise ValueError(f'Unexpected parameters: f{params} for fillet: {self}.')
 

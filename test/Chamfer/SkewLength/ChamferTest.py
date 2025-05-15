@@ -165,7 +165,11 @@ class ChamferTest(ScadTestCase):
                                      position=Vector2.origin)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -200,7 +204,11 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -235,7 +243,11 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -270,7 +282,11 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -302,7 +318,11 @@ class ChamferTest(ScadTestCase):
                                      position=Vector2.origin)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -337,7 +357,11 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -372,7 +396,10 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -407,7 +434,11 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -442,7 +473,11 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -477,7 +512,10 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)
@@ -512,7 +550,11 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        body = [Paint(color='green', child=negative if negative is not None else positive)]
+        
+        if positive:
+            body = [Paint(color='blue', child=positive)]
+        else:
+            body = [Paint(color='red', child=negative)]
 
         polygon = profile.create_polygon(context=context, params=params)
         body += self.mark_nodes(params, polygon)

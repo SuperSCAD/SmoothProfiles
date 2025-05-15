@@ -117,14 +117,16 @@ class ExteriorFilletTest(ScadTestCase):
         return body
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _build3d(self, context: Context, body: Polygon, profiles: List[SmoothProfile3D]) -> ScadWidget:
+    def _build3d(self, context: Context, polygon: Polygon, profiles: List[SmoothProfile3D]) -> ScadWidget:
         """
         Creates ScadWidget using 2D methods.
         """
-        inner_angles = body.inner_angles(context)
-        normal_angles = body.normal_angles(context)
-        extend_by_eps_sides = body.extend_by_eps_sides
-        nodes = body.primary
+        self.assertTrue(polygon.is_clockwise(context))
+
+        inner_angles = polygon.inner_angles(context)
+        normal_angles = polygon.normal_angles(context)
+        extend_by_eps_sides = polygon.extend_by_eps_sides
+        nodes = polygon.primary
         n = len(nodes)
         points = []
         for index in range(n):

@@ -1,9 +1,15 @@
+import unittest
+from typing import List
+
 from super_scad.boolean.Difference import Difference
 from super_scad.boolean.Union import Union
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
 from super_scad.scad.Scad import Scad
+from super_scad.scad.ScadWidget import ScadWidget
+from super_scad.transformation.Translate3D import Translate3D
 from super_scad.type import Vector2
+from super_scad_smooth_profile.SmoothProfile3D import SmoothProfile3D
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
 from super_scad_smooth_profiles.Chamfer import Chamfer
@@ -15,6 +21,61 @@ class ExteriorChamferTest(ScadTestCase):
     """
     Testcases for ExteriorChamfer.
     """
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def _build2d(self, context: Context, body: Polygon, profiles: List[SmoothProfile3D]) -> ScadWidget:
+        """
+        Creates ScadWidget using 2D methods.
+        """
+        inner_angles = body.inner_angles(context)
+        normal_angles = body.normal_angles(context)
+        extend_by_eps_sides = body.extend_by_eps_sides
+        nodes = body.primary
+        n = len(nodes)
+        for index in range(n):
+            extend_side_by_eps1 = (index - 1) % n in extend_by_eps_sides
+            extend_side_by_eps2 = index in extend_by_eps_sides
+
+            params = SmoothProfileParams(inner_angle=inner_angles[index],
+                                         normal_angle=normal_angles[index],
+                                         position=nodes[index],
+                                         edge1_is_extended_by_eps=extend_side_by_eps1,
+                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+
+            negative, positive = profiles[index].create_smooth_profiles(params=params)
+            if negative:
+                body = Difference(children=[body, negative])
+            if positive:
+                body = Union(children=[body, positive])
+
+        return body
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def _build3d(self, context: Context, polygon: Polygon, profiles: List[SmoothProfile3D]) -> ScadWidget:
+        """
+        Creates ScadWidget using 2D methods.
+        """
+        self.assertTrue(polygon.is_clockwise(context))
+
+        inner_angles = polygon.inner_angles(context)
+        normal_angles = polygon.normal_angles(context)
+        extend_by_eps_sides = polygon.extend_by_eps_sides
+        nodes = polygon.primary
+        n = len(nodes)
+        points = []
+        for index in range(n):
+            extend_side_by_eps1 = (index - 1) % n in extend_by_eps_sides
+            extend_side_by_eps2 = index in extend_by_eps_sides
+
+            params = SmoothProfileParams(inner_angle=inner_angles[index],
+                                         normal_angle=normal_angles[index],
+                                         position=nodes[index],
+                                         edge1_is_extended_by_eps=extend_side_by_eps1,
+                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+
+            points.extend(profiles[index].create_polygon(context=context, params=params))
+
+        return Polygon(points=points)
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_convexity(self):
@@ -85,7 +146,7 @@ class ExteriorChamferTest(ScadTestCase):
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle),                                                 90.0 + 0.5 * (180.0 - inner_angle))
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * (180.0 - inner_angle))
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
@@ -95,7 +156,7 @@ class ExteriorChamferTest(ScadTestCase):
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle),                                                 90.0 + 0.5 * (180.0 - inner_angle))
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * (180.0 - inner_angle))
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
@@ -112,7 +173,7 @@ class ExteriorChamferTest(ScadTestCase):
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset2(inner_angle=inner_angle),                                                 90.0 + 0.5 * (180.0 - inner_angle))
+        p2 = p1 + Vector2.from_polar(profile.offset2(inner_angle=inner_angle), 90.0 + 0.5 * (180.0 - inner_angle))
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
@@ -137,7 +198,7 @@ class ExteriorChamferTest(ScadTestCase):
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset2(inner_angle=inner_angle),                                                 90.0 + 0.5 * (180.0 - inner_angle))
+        p2 = p1 + Vector2.from_polar(profile.offset2(inner_angle=inner_angle), 90.0 + 0.5 * (180.0 - inner_angle))
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
@@ -166,27 +227,11 @@ class ExteriorChamferTest(ScadTestCase):
                     Chamfer(skew_height=3.0, side=2),
                     Chamfer(skew_length=5.0, side=1)]
 
-        inner_angles = body.inner_angles(context)
-        normal_angles = body.normal_angles(context)
-        extend_by_eps_sides = body.extend_by_eps_sides
-        nodes = body.primary
-
-        n = len(nodes)
-        for index in range(n):
-            extend_side_by_eps1 = (index - 1) % n in extend_by_eps_sides
-            extend_side_by_eps2 = index in extend_by_eps_sides
-
-            params = SmoothProfileParams(inner_angle=inner_angles[index],
-                                         normal_angle=normal_angles[index],
-                                         position=nodes[index],
-                                         edge1_is_extended_by_eps=extend_side_by_eps1,
-                                         edge2_is_extended_by_eps=extend_side_by_eps2)
-
-            negative, positive = profiles[index].create_smooth_profiles(params=params)
-            if negative:
-                body = Difference(children=[body, negative])
-            if positive:
-                body = Union(children=[body, positive])
+        body2d = self._build2d(context, body, profiles)
+        body2d = Translate3D(x=-30.0, child=body2d)
+        body3d = self._build3d(context, body, profiles)
+        body3d = Translate3D(x=10.0, child=body3d)
+        body = Union(children=[body2d, body3d])
 
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)
@@ -205,32 +250,16 @@ class ExteriorChamferTest(ScadTestCase):
         body = Polygon(points=points,
                        extend_by_eps_sides={1})
 
-        factories = [Chamfer(skew_length=0.0, side=2),
+        profiles = [Chamfer(skew_length=0.0, side=2),
                      Chamfer(skew_height=0.0, side=1),
                      Chamfer(skew_height=0.0, side=2),
                      Chamfer(skew_length=0.0, side=1)]
 
-        inner_angles = body.inner_angles(context)
-        normal_angles = body.normal_angles(context)
-        extend_by_eps_sides = body.extend_by_eps_sides
-        nodes = body.primary
-
-        n = len(nodes)
-        for index in range(n):
-            extend_side_by_eps1 = (index - 1) % n in extend_by_eps_sides
-            extend_side_by_eps2 = index in extend_by_eps_sides
-
-            params = SmoothProfileParams(inner_angle=inner_angles[index],
-                                         normal_angle=normal_angles[index],
-                                         position=nodes[index],
-                                         edge1_is_extended_by_eps=extend_side_by_eps1,
-                                         edge2_is_extended_by_eps=extend_side_by_eps2)
-
-            negative, positive = factories[index].create_smooth_profiles(params=params)
-            if negative:
-                body = Difference(children=[body, negative])
-            if positive:
-                body = Union(children=[body, positive])
+        body2d = self._build2d(context, body, profiles)
+        body2d = Translate3D(x=-30.0, child=body2d)
+        body3d = self._build3d(context, body, profiles)
+        body3d = Translate3D(x=10.0, child=body3d)
+        body = Union(children=[body2d, body3d])
 
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)
@@ -239,3 +268,5 @@ class ExteriorChamferTest(ScadTestCase):
         self.assertEqual(expected, actual)
 
 # ----------------------------------------------------------------------------------------------------------------------
+if __name__ == "__main__":
+    unittest.main()

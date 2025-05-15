@@ -217,22 +217,25 @@ class Chamfer(SmoothProfile3D):
                 return self._create_polygon(context, params.inner_angle, params.normal_angle, params.position)
 
             if self._side == 1:
-                return self._create_polygon(context,
-                                            180.0 - params.inner_angle,
-                                            params.normal_angle - 90.0,
-                                            params.position)
+                return list(reversed(self._create_polygon(context,
+                                                          180.0 - params.inner_angle,
+                                                          params.normal_angle - 90.0,
+                                                          params.position)))
 
             if self._side == 2:
-                return self._create_polygon(context,
-                                            180.0 - params.inner_angle,
-                                            params.normal_angle + 90.0,
-                                            params.position)
+                return list(reversed(self._create_polygon(context,
+                                                          180.0 - params.inner_angle,
+                                                          params.normal_angle + 90.0,
+                                                          params.position)))
 
         if params.inner_angle > 180.0:
-            return self._create_polygon(context,
-                                        360.0 - params.inner_angle,
-                                        params.normal_angle - 180.0,
-                                        params.position)
+            if self._side is None:
+                return list(reversed(self._create_polygon(context,
+                                                          360.0 - params.inner_angle,
+                                                          params.normal_angle - 180.0,
+                                                          params.position)))
+
+        raise ValueError(f'Unexpected parameters: f{params} for fillet: {self}.')
 
     # ------------------------------------------------------------------------------------------------------------------
     def _create_polygon(self,
