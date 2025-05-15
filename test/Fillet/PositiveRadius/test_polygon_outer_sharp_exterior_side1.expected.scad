@@ -31,14 +31,14 @@ union()
    }
    color(c = [1.0, 0.0, 0.0, 1.0])
    {
-      translate(v = [-4.7958, 3.8148])
+      translate(v = [-1.2217, -6.005])
       {
          circle(d = 0.5, $fn = 36);
       }
    }
    color(c = [1.0, 0.647, 0.0, 1.0])
    {
-      translate(v = [-4.5931, 3.6491])
+      translate(v = [-1.1729, -5.7478])
       {
          circle(d = 0.5, $fn = 36);
       }
@@ -52,14 +52,14 @@ union()
    }
    color(c = [0.0, 0.0, 1.0, 1.0])
    {
-      translate(v = [-1.1729, -5.7478])
+      translate(v = [-4.5931, 3.6491])
       {
          circle(d = 0.5, $fn = 36);
       }
    }
    color(c = [0.0, 0.0, 1.0, 1.0])
    {
-      translate(v = [-1.2217, -6.005])
+      translate(v = [-4.7958, 3.8148])
       {
          circle(d = 0.5, $fn = 36);
       }

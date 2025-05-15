@@ -1,4 +1,5 @@
 import random
+import unittest
 
 from super_scad.boolean.Compound import Compound
 from super_scad.boolean.Difference import Difference
@@ -519,4 +520,7 @@ class FilletTest(ScadTestCase):
         expected = path_expected.read_text()
         self.assertEqual(expected, actual)
 
+
 # ----------------------------------------------------------------------------------------------------------------------
+if __name__ == "__main__":
+    unittest.main()

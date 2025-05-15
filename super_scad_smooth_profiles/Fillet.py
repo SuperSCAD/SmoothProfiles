@@ -223,66 +223,106 @@ class Fillet(SmoothProfile3D):
             return [params.position]
 
         if params.inner_angle < 180.0:
-            if self._side is None:
-                return self._create_polygon(context, params.inner_angle, params.normal_angle, params.position)
-
-            if self._side == 1:
+            if self._side is None and self._radius > 0.0:
+                alpha = math.radians(0.5 * params.inner_angle)
+                position = params.position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha),
+                                                                            params.normal_angle)
                 return self._create_polygon(context,
+                                            position,
+                                            params.normal_angle - 0.5 * params.inner_angle - 90.0,
                                             180.0 - params.inner_angle,
-                                            params.normal_angle - 90.0,
-                                            params.position)
+                                            -1.0)
 
-            if self._side == 2:
+            if self._side is None and self._radius < 0.0:
+                return [params.position]
+
+            if self._side == 1 and self._radius > 0.0:
+                angle_rotation = params.inner_angle
+                alpha = math.radians(90.0 - 0.5 * params.inner_angle)
+                position = params.position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha),
+                                                                            params.normal_angle - 90.0)
                 return self._create_polygon(context,
-                                            180.0 - params.inner_angle,
-                                            params.normal_angle + 90.0,
-                                            params.position)
+                                            position,
+                                            params.normal_angle - 0.5 * params.inner_angle + 90.0,
+                                            angle_rotation,
+                                            1.0)
+
+            if self._side == 1 and self._radius < 0.0:
+                angle_rotation = 180.0 - params.inner_angle
+                return self._create_polygon(context,
+                                            params.position,
+                                            params.normal_angle - 0.5 * params.inner_angle,
+                                            angle_rotation,
+                                            -1.0)
+
+            if self._side == 2 and self._radius > 0.0:
+                angle_rotation = params.inner_angle
+                alpha = math.radians(90.0 - 0.5 * params.inner_angle)
+                position = params.position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha),
+                                                                            params.normal_angle + 90.0)
+                return self._create_polygon(context,
+                                            position,
+                                            params.normal_angle - 0.5 * params.inner_angle - 90.0,
+                                            angle_rotation,
+                                            1.0)
+
+            if self._side == 2 and self._radius < 0.0:
+                angle_rotation = 180.0 - params.inner_angle
+                return self._create_polygon(context,
+                                            params.position,
+                                            params.normal_angle - 0.5 * params.inner_angle - 180.0,
+                                            angle_rotation,
+                                            -1.0)
 
         if params.inner_angle > 180.0:
-            return list(reversed(self._create_polygon(context,
-                                                      360.0 - params.inner_angle,
-                                                      params.normal_angle - 180.0,
-                                                      params.position)))
+            alpha = math.radians(0.5 * params.inner_angle - 180.0)
+            position = params.position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha),
+                                                                        params.normal_angle)
+            return self._create_polygon(context,
+                                        position,
+                                        params.normal_angle - 0.5 * params.inner_angle + 90.0,
+                                        params.inner_angle - 180.0,
+                                        1.0)
+
+        raise ValueError(f'Unexpected parameters: f{params} for fillet: {self}.')
 
     # ------------------------------------------------------------------------------------------------------------------
     def _create_polygon(self,
                         context: Context,
-                        inner_angle: float,
-                        normal_angle: float,
-                        position: Vector2) -> List[Vector2]:
+                        center: Vector2,
+                        angle_start: float,
+                        angle_rotation: float,
+                        angle_sign: float) -> List[Vector2]:
         """
         Returns the profile as a polygon.
 
         :param context: The build context.
-        :param inner_angle: The inner angle of the node.
-        :param normal_angle: The normal angle of the node.
-        :param position: The position of the node.
+        :param angle_start: The start angle fillet.
+        :param angle_rotation: The angle of rotation of the fillet.
+        :param angle_sign: The direction of rotation of the fillet, i.e. -1.0 clockwise, +1.0 counterclockwise.
         """
         nodes = []
 
-        inner_angle = Angle.normalize(inner_angle)
-        normal_angle = Angle.normalize(normal_angle)
-        rotation = Angle.normalize(180.0 - inner_angle)
+        radius = abs(self._radius)
+        angle_start = Angle.normalize(angle_start)
+        angle_rotation = Angle.normalize(angle_rotation)
 
         # Carefully align nodes with fn4n=True in InteriorFilletWidget._build_fillet_pos()
-        fn = math.floor(Radius2Sides4n.r2sides4n(context, self._radius))
-        steps = int(fn * rotation / 360.0)
+        fn = Radius2Sides4n.r2sides4n(context, radius)
+        steps = int(fn * angle_rotation / 360.0)
         step_angle = 360.0 / fn
 
-        alpha = math.radians(0.5 * inner_angle)
-        center = position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha), normal_angle)
-
-        nodes.append(center + Vector2.from_polar_coordinates(-self._radius, normal_angle + 0.5 * rotation))
+        nodes.append(center + Vector2.from_polar_coordinates(radius, angle_start))
         if steps % 2 == 0:
-            angle = normal_angle - 180.0 + 0.5 * steps * step_angle
             n = steps + 1
+            angle = angle_start + 0.5 * angle_sign * abs((angle_rotation - steps * step_angle))
         else:
-            angle = normal_angle - 180.0 + 0.5 * (steps - 1) * step_angle
             n = steps
+            angle = angle_start + 0.5 * angle_sign * abs((angle_rotation - (steps - 1) * step_angle))
         for i in range(n):
-            nodes.append(center + Vector2.from_polar_coordinates(self._radius, angle))
-            angle -= step_angle
-        nodes.append(center + Vector2.from_polar_coordinates(-self._radius, normal_angle - 0.5 * rotation))
+            nodes.append(center + Vector2.from_polar_coordinates(radius, angle))
+            angle += angle_sign * step_angle
+        nodes.append(center + Vector2.from_polar_coordinates(radius, angle_start + angle_sign * angle_rotation))
 
         return nodes
 

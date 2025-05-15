@@ -1,9 +1,13 @@
+import unittest
+
 from super_scad.boolean.Difference import Difference
 from super_scad.boolean.Union import Union
 from super_scad.d2.Polygon import Polygon
 from super_scad.scad.Context import Context
 from super_scad.scad.Scad import Scad
+from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.type import Vector2
+from super_scad_smooth_profile.SmoothProfile3D import SmoothProfile3D
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
 from super_scad_smooth_profiles.Fillet import Fillet
@@ -66,6 +70,19 @@ class FilletTest(ScadTestCase):
 
         profile = Fillet(radius=5.0)
 
+        body = self._build2d(context, body, profile)
+
+        path_actual, path_expected = self.paths()
+        scad.run_super_scad(body, path_actual)
+        actual = path_actual.read_text()
+        expected = path_expected.read_text()
+        self.assertEqual(expected, actual)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def _build2d(self, context: Context, body: Polygon, profile: SmoothProfile3D) -> ScadWidget:
+        """
+        Creates ScadWidget using 2D methods.
+        """
         inner_angles = body.inner_angles(context)
         normal_angles = body.normal_angles(context)
         nodes = body.primary
@@ -78,12 +95,7 @@ class FilletTest(ScadTestCase):
                 body = Difference(children=[body, negative])
             if positive:
                 body = Union(children=[body, positive])
-
-        path_actual, path_expected = self.paths()
-        scad.run_super_scad(body, path_actual)
-        actual = path_actual.read_text()
-        expected = path_expected.read_text()
-        self.assertEqual(expected, actual)
+        return body
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_concave_sharp(self) -> None:
@@ -155,18 +167,7 @@ class FilletTest(ScadTestCase):
 
         profile = Fillet(radius=-5.0)
 
-        inner_angles = body.inner_angles(context)
-        normal_angles = body.normal_angles(context)
-        nodes = body.primary
-        for index in range(len(nodes)):
-            params = SmoothProfileParams(inner_angle=inner_angles[index],
-                                         normal_angle=normal_angles[index],
-                                         position=nodes[index])
-            negative, positive = profile.create_smooth_profiles(params=params)
-            if negative:
-                body = Difference(children=[body, negative])
-            if positive:
-                body = Union(children=[body, positive])
+        body = self._build2d(context, body, profile)
 
         path_actual, path_expected = self.paths()
         scad.run_super_scad(body, path_actual)
@@ -264,4 +265,7 @@ class FilletTest(ScadTestCase):
         expected = path_expected.read_text()
         self.assertEqual(expected, actual)
 
+
 # ----------------------------------------------------------------------------------------------------------------------
+if __name__ == "__main__":
+    unittest.main()
