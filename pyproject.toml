@@ -21,13 +21,13 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10.0"
-super-scad = "^0.10.2"
+python = "^3.13.0"
+super-scad = "^0.10.6"
 super-scad-circle-plus = "^0.9.9"
 super-scad-smooth-profile = "^0.6.2"
 
 [tool.poetry.group.dev.dependencies]
-coverage = "^7.6.7"
+coverage = "^7.8.0"
 
 [build-system]
 requires = ["poetry-core"]
