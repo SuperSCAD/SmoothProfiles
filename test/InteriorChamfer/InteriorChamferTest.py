@@ -64,8 +64,7 @@ class InteriorChamferTest(ScadTestCase):
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar_coordinates(profile.offset1(inner_angle=inner_angle),
-                                                 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle),                                                 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
@@ -80,8 +79,7 @@ class InteriorChamferTest(ScadTestCase):
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar_coordinates(profile.offset1(inner_angle=inner_angle),
-                                                 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle),                                                 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
@@ -99,7 +97,7 @@ class InteriorChamferTest(ScadTestCase):
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar_coordinates(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
@@ -129,7 +127,7 @@ class InteriorChamferTest(ScadTestCase):
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar_coordinates(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)

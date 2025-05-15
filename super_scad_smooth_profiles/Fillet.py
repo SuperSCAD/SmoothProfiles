@@ -225,8 +225,7 @@ class Fillet(SmoothProfile3D):
         if params.inner_angle < 180.0:
             if self._side is None and self._radius > 0.0:
                 alpha = math.radians(0.5 * params.inner_angle)
-                position = params.position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha),
-                                                                            params.normal_angle)
+                position = params.position + Vector2.from_polar(self._radius / math.sin(alpha), params.normal_angle)
                 return self._create_polygon(context,
                                             position,
                                             params.normal_angle - 0.5 * params.inner_angle - 90.0,
@@ -239,8 +238,8 @@ class Fillet(SmoothProfile3D):
             if self._side == 1 and self._radius > 0.0:
                 angle_rotation = params.inner_angle
                 alpha = math.radians(90.0 - 0.5 * params.inner_angle)
-                position = params.position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha),
-                                                                            params.normal_angle - 90.0)
+                position = params.position + Vector2.from_polar(self._radius / math.sin(alpha),
+                                                                params.normal_angle - 90.0)
                 return self._create_polygon(context,
                                             position,
                                             params.normal_angle - 0.5 * params.inner_angle + 90.0,
@@ -258,8 +257,8 @@ class Fillet(SmoothProfile3D):
             if self._side == 2 and self._radius > 0.0:
                 angle_rotation = params.inner_angle
                 alpha = math.radians(90.0 - 0.5 * params.inner_angle)
-                position = params.position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha),
-                                                                            params.normal_angle + 90.0)
+                position = params.position + Vector2.from_polar(self._radius / math.sin(alpha),
+                                                                params.normal_angle + 90.0)
                 return self._create_polygon(context,
                                             position,
                                             params.normal_angle - 0.5 * params.inner_angle - 90.0,
@@ -276,8 +275,8 @@ class Fillet(SmoothProfile3D):
 
         if params.inner_angle > 180.0:
             alpha = math.radians(0.5 * params.inner_angle - 180.0)
-            position = params.position + Vector2.from_polar_coordinates(self._radius / math.sin(alpha),
-                                                                        params.normal_angle)
+            position = params.position + Vector2.from_polar(self._radius / math.sin(alpha),
+                                                            params.normal_angle)
             return self._create_polygon(context,
                                         position,
                                         params.normal_angle - 0.5 * params.inner_angle + 90.0,
@@ -312,7 +311,7 @@ class Fillet(SmoothProfile3D):
         steps = int(fn * angle_rotation / 360.0)
         step_angle = 360.0 / fn
 
-        nodes.append(center + Vector2.from_polar_coordinates(radius, angle_start))
+        nodes.append(center + Vector2.from_polar(radius, angle_start))
         if steps % 2 == 0:
             n = steps + 1
             angle = angle_start + 0.5 * angle_sign * abs((angle_rotation - steps * step_angle))
@@ -320,9 +319,9 @@ class Fillet(SmoothProfile3D):
             n = steps
             angle = angle_start + 0.5 * angle_sign * abs((angle_rotation - (steps - 1) * step_angle))
         for i in range(n):
-            nodes.append(center + Vector2.from_polar_coordinates(radius, angle))
+            nodes.append(center + Vector2.from_polar(radius, angle))
             angle += angle_sign * step_angle
-        nodes.append(center + Vector2.from_polar_coordinates(radius, angle_start + angle_sign * angle_rotation))
+        nodes.append(center + Vector2.from_polar(radius, angle_start + angle_sign * angle_rotation))
 
         return nodes
 

@@ -21,10 +21,10 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.13.0"
-super-scad = "^0.10.6"
-super-scad-circle-plus = "^0.9.9"
-super-scad-smooth-profile = "^0.6.2"
+python = "^3.13"
+super-scad = "^0.11.0"
+super-scad-circle-plus = "^0.9.10"
+super-scad-smooth-profile = "^0.6.3"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.8.0"

@@ -124,9 +124,9 @@ class InteriorChamferWidget(ScadWidget):
         """
         p1 = self._position
         p2 = self._position + \
-             Vector2.from_polar_coordinates(self.skew_height, normal_angle) + \
-             Vector2.from_polar_coordinates(0.5 * self.skew_length, normal_angle + 90.0)
-        p3 = p2 + Vector2.from_polar_coordinates(self.skew_length, normal_angle - 90.0)
+             Vector2.from_polar(self.skew_height, normal_angle) + \
+             Vector2.from_polar(0.5 * self.skew_length, normal_angle + 90.0)
+        p3 = p2 + Vector2.from_polar(self.skew_length, normal_angle - 90.0)
 
         return Polygon(points=[p1, p2, p3], extend_by_eps_sides={0, 2})
 

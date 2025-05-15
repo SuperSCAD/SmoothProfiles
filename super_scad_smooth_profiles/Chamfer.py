@@ -256,9 +256,9 @@ class Chamfer(SmoothProfile3D):
             skew_length = self._skew_length
 
         p1 = position + \
-             Vector2.from_polar_coordinates(skew_height, normal_angle) + \
-             Vector2.from_polar_coordinates(0.5 * skew_length, normal_angle - 90.0)
-        p2 = p1 + Vector2.from_polar_coordinates(skew_length, normal_angle + 90.0)
+             Vector2.from_polar(skew_height, normal_angle) + \
+             Vector2.from_polar(0.5 * skew_length, normal_angle - 90.0)
+        p2 = p1 + Vector2.from_polar(skew_length, normal_angle + 90.0)
 
         return [p1, p2]
 

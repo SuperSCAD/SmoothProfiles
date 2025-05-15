@@ -152,9 +152,9 @@ class ExteriorChamferWidget(ScadWidget):
 
         :param normal_angle: The normal angle of the vertices at the node.
         """
-        p2 = Vector2.from_polar_coordinates(self.skew_height, normal_angle - 90.0) + \
-             Vector2.from_polar_coordinates(0.5 * self.skew_length, normal_angle)
-        p3 = p2 + Vector2.from_polar_coordinates(self.skew_length, normal_angle - 180.0)
+        p2 = Vector2.from_polar(self.skew_height, normal_angle - 90.0) + \
+             Vector2.from_polar(0.5 * self.skew_length, normal_angle)
+        p3 = p2 + Vector2.from_polar(self.skew_length, normal_angle - 180.0)
 
         return Translate2D(vector=self._position,
                            child=Polygon(points=[Vector2.origin, p2, p3],
