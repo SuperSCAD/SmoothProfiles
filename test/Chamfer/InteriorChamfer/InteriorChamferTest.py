@@ -39,8 +39,8 @@ class InteriorChamferTest(ScadTestCase):
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
                                          position=nodes[index],
-                                         edge1_is_extended_by_eps=extend_side_by_eps1,
-                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+                                         preceding_edge_is_extended_by_eps=extend_side_by_eps1,
+                                         succeeding_edge_is_extended_by_eps=extend_side_by_eps2)
 
             negative, positive = profiles[index].create_smooth_profiles(params=params)
             if negative:
@@ -70,8 +70,8 @@ class InteriorChamferTest(ScadTestCase):
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
                                          position=nodes[index],
-                                         edge1_is_extended_by_eps=extend_side_by_eps1,
-                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+                                         preceding_edge_is_extended_by_eps=extend_side_by_eps1,
+                                         succeeding_edge_is_extended_by_eps=extend_side_by_eps2)
 
             points.extend(profiles[index].create_polygon(context=context, params=params))
 
@@ -94,25 +94,25 @@ class InteriorChamferTest(ScadTestCase):
         profile = Chamfer(skew_length=5.0)
 
         # Sharp angle.
-        self.assertAlmostEqual(6.5328, profile.offset1(inner_angle=45.0), places=4)
-        self.assertAlmostEqual(6.5328, profile.offset2(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset_preceding_edge(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset_succeeding_edge(inner_angle=45.0), places=4)
 
         # Oblique angle.
-        self.assertAlmostEqual(2.7060, profile.offset1(inner_angle=135.0), places=4)
-        self.assertAlmostEqual(2.7060, profile.offset2(inner_angle=135.0), places=4)
+        self.assertAlmostEqual(2.7060, profile.offset_preceding_edge(inner_angle=135.0), places=4)
+        self.assertAlmostEqual(2.7060, profile.offset_succeeding_edge(inner_angle=135.0), places=4)
 
         # Concave corner.
-        self.assertAlmostEqual(6.5328, profile.offset1(inner_angle=315.0), places=4)
-        self.assertAlmostEqual(6.5328, profile.offset2(inner_angle=315.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset_preceding_edge(inner_angle=315.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset_succeeding_edge(inner_angle=315.0), places=4)
 
         # Zero angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=180.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=180.0))
 
         # Zero skew length.
         profile = Chamfer(skew_length=0.0)
-        self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=45.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=315.0))
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_skew_length(self):
@@ -125,12 +125,13 @@ class InteriorChamferTest(ScadTestCase):
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset_preceding_edge(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
-        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset_preceding_edge(inner_angle=inner_angle),
+                               profile.offset_succeeding_edge(inner_angle=inner_angle))
 
         # Concave corner.
         self.assertAlmostEqual(profile.skew_height(inner_angle=45.0), profile.skew_height(inner_angle=315.0))
@@ -140,12 +141,13 @@ class InteriorChamferTest(ScadTestCase):
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset_preceding_edge(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
-        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset_preceding_edge(inner_angle=inner_angle),
+                               profile.offset_succeeding_edge(inner_angle=inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_skew_height(self):
@@ -158,12 +160,13 @@ class InteriorChamferTest(ScadTestCase):
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset_preceding_edge(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
-        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset_preceding_edge(inner_angle=inner_angle),
+                               profile.offset_succeeding_edge(inner_angle=inner_angle))
 
         negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
                                                                                        normal_angle=0.0,
@@ -188,12 +191,13 @@ class InteriorChamferTest(ScadTestCase):
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset_preceding_edge(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
-        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset_preceding_edge(inner_angle=inner_angle),
+                               profile.offset_succeeding_edge(inner_angle=inner_angle))
 
         negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
                                                                                        normal_angle=0.0,

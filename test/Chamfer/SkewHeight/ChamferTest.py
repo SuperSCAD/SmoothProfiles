@@ -3,6 +3,7 @@ from super_scad.scad.Context import Context
 from super_scad.scad.Scad import Scad
 from super_scad.transformation.Paint import Paint
 from super_scad.type import Vector2, Vector3
+from super_scad_smooth_profile.EdgeOrder import EdgeOrder
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
 from super_scad_smooth_profiles.Chamfer import Chamfer
@@ -38,25 +39,25 @@ class ChamferTest(ScadTestCase):
         profile = Chamfer(skew_length=5.0)
 
         # Sharp angle.
-        self.assertAlmostEqual(6.5328, profile.offset1(inner_angle=45.0), places=4)
-        self.assertAlmostEqual(6.5328, profile.offset2(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset_preceding_edge(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset_succeeding_edge(inner_angle=45.0), places=4)
 
         # Oblique angle.
-        self.assertAlmostEqual(2.7060, profile.offset1(inner_angle=135.0), places=4)
-        self.assertAlmostEqual(2.7060, profile.offset2(inner_angle=135.0), places=4)
+        self.assertAlmostEqual(2.7060, profile.offset_preceding_edge(inner_angle=135.0), places=4)
+        self.assertAlmostEqual(2.7060, profile.offset_succeeding_edge(inner_angle=135.0), places=4)
 
         # Concave corner.
-        self.assertAlmostEqual(6.5328, profile.offset1(inner_angle=315.0), places=4)
-        self.assertAlmostEqual(6.5328, profile.offset2(inner_angle=315.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset_preceding_edge(inner_angle=315.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset_succeeding_edge(inner_angle=315.0), places=4)
 
         # Zero angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=180.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=180.0))
 
         # Zero skew length.
         profile = Chamfer(skew_length=0.0)
-        self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=45.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=315.0))
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_skew_length(self):
@@ -69,13 +70,14 @@ class ChamferTest(ScadTestCase):
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle),
-                                                 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset_preceding_edge(inner_angle=inner_angle),
+                                     90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
-        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset_preceding_edge(inner_angle=inner_angle),
+                               profile.offset_succeeding_edge(inner_angle=inner_angle))
 
         # Concave corner.
         self.assertAlmostEqual(profile.skew_height(inner_angle=45.0), profile.skew_height(inner_angle=315.0))
@@ -85,12 +87,13 @@ class ChamferTest(ScadTestCase):
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle),                                                 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset_preceding_edge(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
-        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset_preceding_edge(inner_angle=inner_angle),
+                               profile.offset_succeeding_edge(inner_angle=inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_skew_height(self):
@@ -103,17 +106,18 @@ class ChamferTest(ScadTestCase):
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset_preceding_edge(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
-        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset_preceding_edge(inner_angle=inner_angle),
+                               profile.offset_succeeding_edge(inner_angle=inner_angle))
 
         negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
                                                                                        normal_angle=0.0,
                                                                                        position=Vector2.origin))
-        
+
         self.assertEqual(negative.__class__.__name__, '_InteriorChamferWidget')
         self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), negative.skew_height)
         self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), negative.skew_length)
@@ -126,7 +130,7 @@ class ChamferTest(ScadTestCase):
         negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
                                                                                        normal_angle=0.0,
                                                                                        position=Vector2.origin))
-        #self.assertIsInstance(positive, InteriorChamferWidget)
+        # self.assertIsInstance(positive, InteriorChamferWidget)
         self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), positive.skew_height)
         self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), positive.skew_length)
 
@@ -134,17 +138,18 @@ class ChamferTest(ScadTestCase):
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
+        p2 = p1 + Vector2.from_polar(profile.offset_preceding_edge(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
-        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset_preceding_edge(inner_angle=inner_angle),
+                               profile.offset_succeeding_edge(inner_angle=inner_angle))
 
         negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
                                                                                        normal_angle=0.0,
                                                                                        position=Vector2.origin))
-        
+
         self.assertEqual(negative.__class__.__name__, '_InteriorChamferWidget')
         self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), negative.skew_height)
         self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), negative.skew_length)
@@ -167,7 +172,7 @@ class ChamferTest(ScadTestCase):
                                      position=Vector2.origin)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -206,7 +211,7 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -245,7 +250,7 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -270,11 +275,11 @@ class ChamferTest(ScadTestCase):
         """
         context = Context(fn=11, vpr=Vector3.origin)
 
-        profile = self.create_profile(side=1)
+        profile = self.create_profile(side=EdgeOrder.PRECEDING)
 
         self.assertFalse(profile.is_internal)
         self.assertTrue(profile.is_external)
-        self.assertEqual(profile.side, 1)
+        self.assertEqual(profile.side, EdgeOrder.PRECEDING)
 
         inner_angle = 115.0
         normal_angle = 200.0
@@ -284,7 +289,7 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -309,18 +314,18 @@ class ChamferTest(ScadTestCase):
         """
         context = Context(fn=11, vpr=Vector3.origin)
 
-        profile = self.create_profile(side=2)
+        profile = self.create_profile(side=EdgeOrder.SUCCEEDING)
 
         self.assertFalse(profile.is_internal)
         self.assertTrue(profile.is_external)
-        self.assertEqual(profile.side, 2)
+        self.assertEqual(profile.side, EdgeOrder.SUCCEEDING)
 
         params = SmoothProfileParams(inner_angle=115.0,
                                      normal_angle=200.0,
                                      position=Vector2.origin)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -345,11 +350,11 @@ class ChamferTest(ScadTestCase):
         """
         context = Context(fn=11, vpr=Vector3.origin)
 
-        profile = self.create_profile(side=1)
+        profile = self.create_profile(side=EdgeOrder.PRECEDING)
 
         self.assertFalse(profile.is_internal)
         self.assertTrue(profile.is_external)
-        self.assertEqual(profile.side, 1)
+        self.assertEqual(profile.side, EdgeOrder.PRECEDING)
 
         inner_angle = 63.0
         normal_angle = 290.0
@@ -359,7 +364,7 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -384,11 +389,11 @@ class ChamferTest(ScadTestCase):
         """
         context = Context(fn=11, vpr=Vector3.origin)
 
-        profile = self.create_profile(side=2)
+        profile = self.create_profile(side=EdgeOrder.SUCCEEDING)
 
         self.assertFalse(profile.is_internal)
         self.assertTrue(profile.is_external)
-        self.assertEqual(profile.side, 2)
+        self.assertEqual(profile.side, EdgeOrder.SUCCEEDING)
 
         inner_angle = 63.0
         normal_angle = 290.0
@@ -398,7 +403,7 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -423,11 +428,11 @@ class ChamferTest(ScadTestCase):
         """
         context = Context(fn=11, vpr=Vector3.origin)
 
-        profile = self.create_profile(side=1)
+        profile = self.create_profile(side=EdgeOrder.PRECEDING)
 
         self.assertFalse(profile.is_internal)
         self.assertTrue(profile.is_external)
-        self.assertEqual(profile.side, 1)
+        self.assertEqual(profile.side, EdgeOrder.PRECEDING)
 
         inner_angle = 90.0
         normal_angle = 33.0
@@ -437,7 +442,7 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -462,11 +467,11 @@ class ChamferTest(ScadTestCase):
         """
         context = Context(fn=11, vpr=Vector3.origin)
 
-        profile = self.create_profile(side=2)
+        profile = self.create_profile(side=EdgeOrder.SUCCEEDING)
 
         self.assertFalse(profile.is_internal)
         self.assertTrue(profile.is_external)
-        self.assertEqual(profile.side, 2)
+        self.assertEqual(profile.side, EdgeOrder.SUCCEEDING)
 
         inner_angle = 90.0
         normal_angle = 33.0
@@ -476,7 +481,7 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -515,7 +520,7 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:
@@ -554,7 +559,7 @@ class ChamferTest(ScadTestCase):
                                      position=position)
 
         negative, positive = profile.create_smooth_profiles(params=params)
-        
+
         if positive:
             body = [Paint(color='blue', child=positive)]
         else:

@@ -13,6 +13,7 @@ from super_scad.type import Vector2
 from super_scad.type.Angle import Angle
 from super_scad.util.Radius2Sides4n import Radius2Sides4n
 from super_scad_circle_plus.CircleSector import CircleSector
+from super_scad_smooth_profile.EdgeOrder import EdgeOrder
 from super_scad_smooth_profile.SmoothProfile3D import SmoothProfile3D
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
@@ -26,22 +27,22 @@ class _ExteriorFilletWidget(ScadWidget):
     def __init__(self,
                  *,
                  radius: float,
-                 side: int,
+                 side: EdgeOrder,
                  inner_angle: float,
                  normal_angle: float,
                  position: Vector2,
-                 edge1_is_extended_by_eps: bool,
-                 edge2_is_extended_by_eps: bool):
+                 preceding_edge_is_extended_by_eps: bool,
+                 succeeding_edge_is_extended_by_eps: bool):
         """
         Object constructor.
 
         :param radius: The radius of the fillet.
         :param side: The edge on which the exterior fillet must be applied.
-        :param inner_angle: Inner angle of the vertices.
-        :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
-                             the two vertices and with origin at the node.
-        :param edge1_is_extended_by_eps: Whether the first side is extended by eps.
-        :param edge2_is_extended_by_eps: Whether the second side is extended by eps.
+        :param inner_angle: The inner angle between the two edges.
+        :param normal_angle: The normal angle of the two edges, i.e., the angle of the vector that lies exactly between
+                             the two edges and with origin at the node.
+        :param preceding_edge_is_extended_by_eps: Whether the preceding edge is extended by eps.
+        :param succeeding_edge_is_extended_by_eps: Whether the succeeding edge is extended by eps.
         """
         ScadWidget.__init__(self)
 
@@ -50,7 +51,7 @@ class _ExteriorFilletWidget(ScadWidget):
         The radius of the fillet.
         """
 
-        self._side: float = side
+        self._side: EdgeOrder = side
         """
         The edge on which the exterior fillet must be applied. 
         """
@@ -62,7 +63,7 @@ class _ExteriorFilletWidget(ScadWidget):
 
         self._normal_angle: float = Angle.normalize(normal_angle)
         """
-        The normal angle of the vertices at the node.
+        The normal angle of the two edges.
         """
 
         self._position: Vector2 = position
@@ -70,14 +71,14 @@ class _ExteriorFilletWidget(ScadWidget):
         The position of the node.
         """
 
-        self._edge1_is_extended_by_eps = edge1_is_extended_by_eps
+        self._preceding_edge_is_extended_by_eps = preceding_edge_is_extended_by_eps
         """
-        Whether the first side is extended by eps.
+        Whether the preceding edge is extended by eps.
         """
 
-        self._edge2_is_extended_by_eps = edge2_is_extended_by_eps
+        self._succeeding_edge_is_extended_by_eps = succeeding_edge_is_extended_by_eps
         """
-        Whether the second side is extended by eps.
+        Whether the succeeding edge is extended by eps.
         """
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -88,7 +89,7 @@ class _ExteriorFilletWidget(ScadWidget):
         :param context: The build context.
         """
         Radius2Sides4n.r2sides4n(context, self._radius)
-        if self._side == 1:
+        if self._side == EdgeOrder.PRECEDING:
             if self._radius > 0.0:
                 # The corner is concave.
                 alpha = math.radians(180 - self._inner_angle) / 2.0
@@ -96,31 +97,31 @@ class _ExteriorFilletWidget(ScadWidget):
                 return self._build_fillet_pos(alpha,
                                               0.0,
                                               True,
-                                              self._edge2_is_extended_by_eps)
+                                              self._succeeding_edge_is_extended_by_eps)
 
             if self._radius < 0.0:
                 # The corner is concave.
                 return self._build_fillet_neg(0.0,
-                                              self._edge2_is_extended_by_eps,
+                                              self._succeeding_edge_is_extended_by_eps,
                                               True)
 
-        elif self._side == 2:
+        elif self._side == EdgeOrder.SUCCEEDING:
             if self._radius > 0.0:
                 # The corner is concave.
                 alpha = math.radians(180 - self._inner_angle) / 2.0
 
                 return self._build_fillet_pos(alpha,
                                               180.0,
-                                              self._edge1_is_extended_by_eps,
+                                              self._preceding_edge_is_extended_by_eps,
                                               True)
 
             if self._radius < 0.0:
                 # The corner is concave.
                 return self._build_fillet_neg(180.0,
                                               True,
-                                              self._edge1_is_extended_by_eps)
+                                              self._preceding_edge_is_extended_by_eps)
         else:
-            raise ValueError(f'Side must be 1 or 2, got {self._side}.')
+            raise ValueError(f'Unknown side: {self._side}.')
 
         return Empty()
 
@@ -191,8 +192,8 @@ class _InteriorFilletWidget(ScadWidget):
 
         :param radius: The radius of the fillet.
         :param inner_angle: Inner angle of the corner.
-        :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
-                             the two vertices and with origin at the node.
+        :param normal_angle: The normal angle of the two edges, i.e., the angle of the vector that lies exactly between
+                             the two edges and with origin at the node.
         """
         ScadWidget.__init__(self)
 
@@ -208,7 +209,7 @@ class _InteriorFilletWidget(ScadWidget):
 
         self._normal_angle: float = Angle.normalize(normal_angle)
         """
-        The normal angle of the vertices at the node.
+        The normal angle of the two edges.
         """
 
         self._position: Vector2 = position
@@ -223,7 +224,6 @@ class _InteriorFilletWidget(ScadWidget):
 
         :param context: The build context.
         """
-
         Radius2Sides4n.r2sides4n(context, self._radius)
         if self._radius > 0.0 and self._inner_angle < 180.0:
             # The corner is convex.
@@ -290,7 +290,7 @@ class Fillet(SmoothProfile3D):
     """
 
     # ------------------------------------------------------------------------------------------------------------------
-    def __init__(self, *, radius: float, side: int | None = None):
+    def __init__(self, *, radius: float, side: EdgeOrder | None = None):
         """
         Object constructor.
 
@@ -303,7 +303,7 @@ class Fillet(SmoothProfile3D):
         The radius of the fillet.
         """
 
-        self._side: int | None = side
+        self._side: EdgeOrder | None = side
         """
         The edge on which the exterior fillet must be applied. 
         """
@@ -326,7 +326,7 @@ class Fillet(SmoothProfile3D):
 
     # ------------------------------------------------------------------------------------------------------------------
     @property
-    def side(self) -> int | None:
+    def side(self) -> EdgeOrder | None:
         """
         Returns the edge on which the exterior fillet must be applied.
         """
@@ -341,11 +341,11 @@ class Fillet(SmoothProfile3D):
         return 2
 
     # ------------------------------------------------------------------------------------------------------------------
-    def offset1(self, *, inner_angle: float) -> float:
+    def offset_preceding_edge(self, *, inner_angle: float) -> float:
         """
-        Returns the offset of the smooth profile on the first vertex of the node.
+        Returns the offset of the smooth profile on the preceding edge.
 
-        :param inner_angle: Inner angle between the two vertices of the node.
+        :param inner_angle: The inner angle between the two edges.
         """
         if self._side is None:
             if self._radius > 0.0 and inner_angle < 180.0:
@@ -366,7 +366,7 @@ class Fillet(SmoothProfile3D):
 
             return 0.0
 
-        if self._side == 1:
+        if self._side == EdgeOrder.PRECEDING:
             # The corner is convex.
             if self._radius > 0.0 and inner_angle < 180.0:
                 # The corner is convex.
@@ -386,17 +386,17 @@ class Fillet(SmoothProfile3D):
 
             return 0.0
 
-        if self._side == 2:
+        if self._side == EdgeOrder.SUCCEEDING:
             return 0.0
 
-        raise ValueError(f'Side must be 1 or 2, got {self._side}.')
+        raise ValueError(f'Unknown side: {self._side}.')
 
     # ------------------------------------------------------------------------------------------------------------------
-    def offset2(self, *, inner_angle: float) -> float:
+    def offset_succeeding_edge(self, *, inner_angle: float) -> float:
         """
-        Returns the offset of the smooth profile on the second vertex of the node.
+        Returns the offset of the smooth profile on the succeeding edge.
 
-        :param inner_angle: Inner angle between the two vertices of the node.
+        :param inner_angle: The inner angle between the two edges.
         """
         if self._side is None:
             if self._radius > 0.0 and inner_angle < 180.0:
@@ -417,7 +417,7 @@ class Fillet(SmoothProfile3D):
 
             return 0.0
 
-        if self._side == 2:
+        if self._side == EdgeOrder.SUCCEEDING:
             if self._radius > 0.0 and inner_angle < 180.0:
                 # The corner is convex.
                 alpha = math.radians(inner_angle) / 2.0
@@ -436,10 +436,10 @@ class Fillet(SmoothProfile3D):
 
             return 0.0
 
-        if self._side == 1:
+        if self._side == EdgeOrder.PRECEDING:
             return 0.0
 
-        raise ValueError(f'Side must be 1 or 2, got {self._side}.')
+        raise ValueError(f'Unknown side: {self._side}.')
 
     # ------------------------------------------------------------------------------------------------------------------
     def create_smooth_profiles(self, *, params: SmoothProfileParams) -> Tuple[ScadWidget | None, ScadWidget | None]:
@@ -475,8 +475,8 @@ class Fillet(SmoothProfile3D):
                                            inner_angle=params.inner_angle,
                                            normal_angle=params.normal_angle,
                                            position=params.position,
-                                           edge1_is_extended_by_eps=params.edge1_is_extended_by_eps,
-                                           edge2_is_extended_by_eps=params.edge2_is_extended_by_eps)
+                                           preceding_edge_is_extended_by_eps=params.preceding_edge_is_extended_by_eps,
+                                           succeeding_edge_is_extended_by_eps=params.succeeding_edge_is_extended_by_eps)
 
             negative, positive = None, widget
 
@@ -510,7 +510,7 @@ class Fillet(SmoothProfile3D):
                                             360.0 - params.inner_angle,
                                             -1.0)
 
-            if self._side == 1 and self._radius > 0.0:
+            if self._side == EdgeOrder.PRECEDING and self._radius > 0.0:
                 angle_rotation = params.inner_angle
                 alpha = math.radians(90.0 - 0.5 * params.inner_angle)
                 position = params.position + Vector2.from_polar(self._radius / math.sin(alpha),
@@ -521,7 +521,7 @@ class Fillet(SmoothProfile3D):
                                             angle_rotation,
                                             1.0)
 
-            if self._side == 1 and self._radius < 0.0:
+            if self._side == EdgeOrder.PRECEDING and self._radius < 0.0:
                 angle_rotation = 180.0 - params.inner_angle
                 return self._create_polygon(context,
                                             params.position,
@@ -529,7 +529,7 @@ class Fillet(SmoothProfile3D):
                                             angle_rotation,
                                             -1.0)
 
-            if self._side == 2 and self._radius > 0.0:
+            if self._side == EdgeOrder.SUCCEEDING and self._radius > 0.0:
                 angle_rotation = params.inner_angle
                 alpha = math.radians(90.0 - 0.5 * params.inner_angle)
                 position = params.position + Vector2.from_polar(self._radius / math.sin(alpha),
@@ -540,7 +540,7 @@ class Fillet(SmoothProfile3D):
                                             angle_rotation,
                                             1.0)
 
-            if self._side == 2 and self._radius < 0.0:
+            if self._side == EdgeOrder.SUCCEEDING and self._radius < 0.0:
                 angle_rotation = 180.0 - params.inner_angle
                 return self._create_polygon(context,
                                             params.position,

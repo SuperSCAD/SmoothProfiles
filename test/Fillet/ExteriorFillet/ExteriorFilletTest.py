@@ -9,6 +9,7 @@ from super_scad.scad.Scad import Scad
 from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.transformation.Translate3D import Translate3D
 from super_scad.type import Vector2
+from super_scad_smooth_profile.EdgeOrder import EdgeOrder
 from super_scad_smooth_profile.SmoothProfile3D import SmoothProfile3D
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
@@ -27,33 +28,33 @@ class ExteriorFilletTest(ScadTestCase):
         Test the size of a fillet on the first side.
         """
         # Positive radius.
-        profile = Fillet(radius=5.0, side=1)
+        profile = Fillet(radius=5.0, side=EdgeOrder.PRECEDING)
 
         # Sharp angle.
-        self.assertAlmostEqual(12.0711, profile.offset1(inner_angle=45.0), places=4)
-        self.assertEqual(0.0, profile.offset2(inner_angle=45.0))
+        self.assertAlmostEqual(12.0711, profile.offset_preceding_edge(inner_angle=45.0), places=4)
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=45.0))
 
         # Oblique angle.
-        self.assertAlmostEqual(2.0711, profile.offset1(inner_angle=135.0), places=4)
-        self.assertEqual(0.0, profile.offset2(inner_angle=135.0))
+        self.assertAlmostEqual(2.0711, profile.offset_preceding_edge(inner_angle=135.0), places=4)
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=135.0))
 
         # Concave corner.
-        self.assertEqual(0.0, profile.offset1(inner_angle=315.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=315.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=315.0))
 
         # Zero angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=180.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=180.0))
 
         # Negative radius.
-        profile = Fillet(radius=-5.0, side=1)
-        self.assertAlmostEqual(5.0, profile.offset1(inner_angle=45.0), places=4)
-        self.assertEqual(0.0, profile.offset2(inner_angle=45.0))
+        profile = Fillet(radius=-5.0, side=EdgeOrder.PRECEDING)
+        self.assertAlmostEqual(5.0, profile.offset_preceding_edge(inner_angle=45.0), places=4)
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=45.0))
 
         # Zero radius.
-        profile = Fillet(radius=0.0, side=1)
-        self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
+        profile = Fillet(radius=0.0, side=EdgeOrder.PRECEDING)
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=45.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=315.0))
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_sizes_side2(self):
@@ -61,33 +62,33 @@ class ExteriorFilletTest(ScadTestCase):
         Test the size of a fillet on the second side.
         """
         # Positive radius.
-        profile = Fillet(radius=5.0, side=2)
+        profile = Fillet(radius=5.0, side=EdgeOrder.SUCCEEDING)
 
         # Sharp angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
-        self.assertAlmostEqual(12.0711, profile.offset2(inner_angle=45.0), places=4)
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=45.0))
+        self.assertAlmostEqual(12.0711, profile.offset_succeeding_edge(inner_angle=45.0), places=4)
 
         # Oblique angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=135.0))
-        self.assertAlmostEqual(2.0711, profile.offset2(inner_angle=135.0), places=4)
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=135.0))
+        self.assertAlmostEqual(2.0711, profile.offset_succeeding_edge(inner_angle=135.0), places=4)
 
         # Concave corner.
-        self.assertEqual(0.0, profile.offset1(inner_angle=315.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=315.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=315.0))
 
         # Zero angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=180.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=180.0))
 
         # Negative radius.
-        profile = Fillet(radius=-5.0, side=2)
-        self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
-        self.assertAlmostEqual(5.0, profile.offset2(inner_angle=45.0), places=4)
+        profile = Fillet(radius=-5.0, side=EdgeOrder.SUCCEEDING)
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=45.0))
+        self.assertAlmostEqual(5.0, profile.offset_succeeding_edge(inner_angle=45.0), places=4)
 
         # Zero radius.
-        profile = Fillet(radius=0.0, side=2)
-        self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
+        profile = Fillet(radius=0.0, side=EdgeOrder.SUCCEEDING)
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=45.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=315.0))
 
     # ------------------------------------------------------------------------------------------------------------------
     def _build2d(self, context: Context, body: Polygon, profiles: List[SmoothProfile3D]) -> ScadWidget:
@@ -106,8 +107,8 @@ class ExteriorFilletTest(ScadTestCase):
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
                                          position=nodes[index],
-                                         edge1_is_extended_by_eps=extend_side_by_eps1,
-                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+                                         preceding_edge_is_extended_by_eps=extend_side_by_eps1,
+                                         succeeding_edge_is_extended_by_eps=extend_side_by_eps2)
             negative, positive = profiles[index].create_smooth_profiles(params=params)
             if negative:
                 body = Difference(children=[body, negative])
@@ -136,8 +137,8 @@ class ExteriorFilletTest(ScadTestCase):
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
                                          position=nodes[index],
-                                         edge1_is_extended_by_eps=extend_side_by_eps1,
-                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+                                         preceding_edge_is_extended_by_eps=extend_side_by_eps1,
+                                         succeeding_edge_is_extended_by_eps=extend_side_by_eps2)
 
             points.extend(profiles[index].create_polygon(context=context, params=params))
 
@@ -153,10 +154,10 @@ class ExteriorFilletTest(ScadTestCase):
         body = Polygon(points=[Vector2.origin, Vector2(2, 20), Vector2(18, 20), Vector2(20, 0)],
                        extend_by_eps_sides={1})
 
-        profiles = [Fillet(radius=5.0, side=2),
-                    Fillet(radius=5.0, side=1),
-                    Fillet(radius=5.0, side=2),
-                    Fillet(radius=5.0, side=1)]
+        profiles = [Fillet(radius=5.0, side=EdgeOrder.SUCCEEDING),
+                    Fillet(radius=5.0, side=EdgeOrder.PRECEDING),
+                    Fillet(radius=5.0, side=EdgeOrder.SUCCEEDING),
+                    Fillet(radius=5.0, side=EdgeOrder.PRECEDING),]
 
         body2d = self._build2d(context, body, profiles)
         body2d = Translate3D(x=-30.0, child=body2d)
@@ -181,10 +182,10 @@ class ExteriorFilletTest(ScadTestCase):
         body = Polygon(points=[Vector2.origin, Vector2(2, 20), Vector2(18, 20), Vector2(20, 0)],
                        extend_by_eps_sides={1})
 
-        profiles = [Fillet(radius=-5.0, side=2),
-                    Fillet(radius=-5.0, side=1),
-                    Fillet(radius=-5.0, side=2),
-                    Fillet(radius=-5.0, side=1)]
+        profiles = [Fillet(radius=-5.0, side=EdgeOrder.SUCCEEDING),
+                    Fillet(radius=-5.0, side=EdgeOrder.PRECEDING),
+                    Fillet(radius=-5.0, side=EdgeOrder.SUCCEEDING),
+                    Fillet(radius=-5.0, side=EdgeOrder.PRECEDING),]
 
         body2d = self._build2d(context, body, profiles)
         body2d = Translate3D(x=-30.0, child=body2d)

@@ -62,8 +62,8 @@ class InteriorFilletTest(ScadTestCase):
             params = SmoothProfileParams(inner_angle=inner_angles[index],
                                          normal_angle=normal_angles[index],
                                          position=nodes[index],
-                                         edge1_is_extended_by_eps=extend_side_by_eps1,
-                                         edge2_is_extended_by_eps=extend_side_by_eps2)
+                                         preceding_edge_is_extended_by_eps=extend_side_by_eps1,
+                                         succeeding_edge_is_extended_by_eps=extend_side_by_eps2)
 
             points.extend(profiles[index].create_polygon(context=context, params=params))
 
@@ -78,36 +78,36 @@ class InteriorFilletTest(ScadTestCase):
         profile = Fillet(radius=5.0)
 
         # Sharp angle.
-        self.assertAlmostEqual(12.0711, profile.offset1(inner_angle=45.0), places=4)
-        self.assertAlmostEqual(12.0711, profile.offset2(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(12.0711, profile.offset_preceding_edge(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(12.0711, profile.offset_succeeding_edge(inner_angle=45.0), places=4)
 
-        self.assertAlmostEqual(5.0, profile.offset1(inner_angle=90.0), places=4)
-        self.assertAlmostEqual(5.0, profile.offset2(inner_angle=90.0), places=4)
+        self.assertAlmostEqual(5.0, profile.offset_preceding_edge(inner_angle=90.0), places=4)
+        self.assertAlmostEqual(5.0, profile.offset_succeeding_edge(inner_angle=90.0), places=4)
 
         # Oblique angle.
-        self.assertAlmostEqual(2.0711, profile.offset1(inner_angle=135.0), places=4)
-        self.assertAlmostEqual(2.0711, profile.offset2(inner_angle=135.0), places=4)
+        self.assertAlmostEqual(2.0711, profile.offset_preceding_edge(inner_angle=135.0), places=4)
+        self.assertAlmostEqual(2.0711, profile.offset_succeeding_edge(inner_angle=135.0), places=4)
 
-        self.assertAlmostEqual(5.0, profile.offset1(inner_angle=270.0), places=4)
-        self.assertAlmostEqual(5.0, profile.offset2(inner_angle=270.0), places=4)
+        self.assertAlmostEqual(5.0, profile.offset_preceding_edge(inner_angle=270.0), places=4)
+        self.assertAlmostEqual(5.0, profile.offset_succeeding_edge(inner_angle=270.0), places=4)
 
         # Concave corner.
-        self.assertAlmostEqual(12.0711, profile.offset1(inner_angle=315.0), places=4)
-        self.assertAlmostEqual(12.0711, profile.offset2(inner_angle=315.0), places=4)
+        self.assertAlmostEqual(12.0711, profile.offset_preceding_edge(inner_angle=315.0), places=4)
+        self.assertAlmostEqual(12.0711, profile.offset_succeeding_edge(inner_angle=315.0), places=4)
 
         # Zero angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=180.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=180.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=180.0))
 
         # Negative radius.
         profile = Fillet(radius=-5.0)
-        self.assertAlmostEqual(5.0, profile.offset1(inner_angle=45.0), places=4)
-        self.assertAlmostEqual(5.0, profile.offset2(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(5.0, profile.offset_preceding_edge(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(5.0, profile.offset_succeeding_edge(inner_angle=45.0), places=4)
 
         # Zero radius.
         profile = Fillet(radius=0.0)
-        self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
+        self.assertEqual(0.0, profile.offset_preceding_edge(inner_angle=45.0))
+        self.assertEqual(0.0, profile.offset_succeeding_edge(inner_angle=315.0))
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_convex(self) -> None:

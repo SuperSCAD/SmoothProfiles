@@ -9,6 +9,7 @@ from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.transformation.Translate2D import Translate2D
 from super_scad.type import Vector2
 from super_scad.type.Angle import Angle
+from super_scad_smooth_profile.EdgeOrder import EdgeOrder
 from super_scad_smooth_profile.SmoothProfile3D import SmoothProfile3D
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
@@ -23,23 +24,23 @@ class _ExteriorChamferWidget(ScadWidget):
                  *,
                  skew_length: float | None = None,
                  skew_height: float | None = None,
-                 side: int,
+                 side: EdgeOrder,
                  inner_angle: float,
                  normal_angle: float,
                  position: Vector2,
-                 edge1_is_extended_by_eps: bool,
-                 edge2_is_extended_by_eps: bool):
+                 preceding_edge_is_extended_by_eps: bool,
+                 succeeding_edge_is_extended_by_eps: bool):
         """
         Object constructor.
 
         :param skew_length: The length of the skew side of the chamfer.
         :param skew_height: The height of the chamfer, measured perpendicular for the skew size to the node.
         :param side: The edge on which the exterior chamfer must be applied.
-        :param inner_angle: Inner angle between the vertices.
-        :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
-                             the two vertices and with origin at the node.
-        :param edge1_is_extended_by_eps: Whether the first side is extended by eps.
-        :param edge2_is_extended_by_eps: Whether the second side is extended by eps.
+        :param inner_angle: The inner angle between the two edges.
+        :param normal_angle: The normal angle of the two edges, i.e., the angle of the vector that lies exactly between
+                             the two edges and with origin at the node.
+        :param preceding_edge_is_extended_by_eps: Whether the preceding edge is extended by eps.
+        :param succeeding_edge_is_extended_by_eps: Whether the succeeding edge is extended by eps.
         """
         ScadWidget.__init__(self)
 
@@ -53,7 +54,7 @@ class _ExteriorChamferWidget(ScadWidget):
         The height of the chamfer, measured perpendicular for the skew size to the node.
         """
 
-        self._side: float = side
+        self._side: EdgeOrder = side
         """
         The edge on which the exterior chamfer must be applied. 
         """
@@ -65,7 +66,7 @@ class _ExteriorChamferWidget(ScadWidget):
 
         self._normal_angle: float = Angle.normalize(normal_angle)
         """
-        The normal angle of the vertices at the node.
+        The normal angle of the two edges.
         """
 
         self._position: Vector2 = position
@@ -73,14 +74,14 @@ class _ExteriorChamferWidget(ScadWidget):
         The position of the node.
         """
 
-        self._edge1_is_extended_by_eps = edge1_is_extended_by_eps
+        self._preceding_edge_is_extended_by_eps = preceding_edge_is_extended_by_eps
         """
-        Whether the first side is extended by eps.
+        Whether the preceding edge is extended by eps.
         """
 
-        self._edge2_is_extended_by_eps = edge2_is_extended_by_eps
+        self._succeeding_edge_is_extended_by_eps = succeeding_edge_is_extended_by_eps
         """
-        Whether the second side is extended by eps.
+        Whether the succeeding edge is extended by eps.
         """
 
         self.__validate_arguments(locals())
@@ -126,21 +127,21 @@ class _ExteriorChamferWidget(ScadWidget):
         :param context: The build context.
         """
         if self.skew_length > 0.0:
-            if self._side == 1:
+            if self._side == EdgeOrder.PRECEDING:
                 polygon = self._build_polygon(self._normal_angle,
                                               True,
-                                              self._edge2_is_extended_by_eps)
+                                              self._succeeding_edge_is_extended_by_eps)
 
                 return polygon
 
-            if self._side == 2:
+            if self._side == EdgeOrder.SUCCEEDING:
                 polygon = self._build_polygon(Angle.normalize(self._normal_angle - 180.0),
-                                              self._edge1_is_extended_by_eps,
+                                              self._preceding_edge_is_extended_by_eps,
                                               True)
 
                 return polygon
 
-            raise ValueError(f'Side must be 1 or 2, got {self._side}.')
+            raise ValueError(f'Unknown side: {self._side}.')
 
         return Empty()
 
@@ -152,7 +153,7 @@ class _ExteriorChamferWidget(ScadWidget):
         """
         Returns a masking polygon.
 
-        :param normal_angle: The normal angle of the vertices at the node.
+        :param normal_angle: The normal angle of the two edges.
         """
         p2 = Vector2.from_polar(self.skew_height, normal_angle - 90.0) + \
              Vector2.from_polar(0.5 * self.skew_length, normal_angle)
@@ -166,7 +167,7 @@ class _ExteriorChamferWidget(ScadWidget):
 # ----------------------------------------------------------------------------------------------------------------------
 class _InteriorChamferWidget(ScadWidget):
     """
-    Applies a chamfer to vertices at a node.
+    Applies a chamfer to the edges at a node.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -182,9 +183,9 @@ class _InteriorChamferWidget(ScadWidget):
 
         :param skew_length: The length of the skew side of the chamfer.
         :param skew_height: The height of the chamfer, measured perpendicular for the skew size to the node.
-        :param inner_angle: Inner angle between the vertices.
-        :param normal_angle: The normal angle of the vertices, i.e., the angle of the vector that lies exactly between
-                             the two vertices and with origin at the node.
+        :param inner_angle: The inner angle between the two edges.
+        :param normal_angle: The normal angle of the two edges, i.e., the angle of the vector that lies exactly between
+                             the two edges and with origin at the node.
         """
         ScadWidget.__init__(self)
 
@@ -205,7 +206,7 @@ class _InteriorChamferWidget(ScadWidget):
 
         self._normal_angle: float = Angle.normalize(normal_angle)
         """
-        The normal angle of the vertices at the node.
+        The normal angle of the two edges.
         """
 
         self._position: Vector2 = position
@@ -274,7 +275,7 @@ class _InteriorChamferWidget(ScadWidget):
         """
         Returns a masking polygon.
 
-        :param normal_angle: The normal angle of the vertices at the node.
+        :param normal_angle: The normal angle of the two edges.
         """
         p1 = self._position
         p2 = self._position + \
@@ -296,7 +297,7 @@ class Chamfer(SmoothProfile3D):
                  *,
                  skew_length: float | None = None,
                  skew_height: float | None = None,
-                 side: int | None = None):
+                 side: EdgeOrder | None = None):
         """
         Object constructor.
 
@@ -314,7 +315,7 @@ class Chamfer(SmoothProfile3D):
         The height of the chamfer.
         """
 
-        self._side: int | None = side
+        self._side: EdgeOrder | None = side
         """
         The edge on which the exterior chamfer must be applied. 
         """
@@ -337,7 +338,7 @@ class Chamfer(SmoothProfile3D):
 
     # ------------------------------------------------------------------------------------------------------------------
     @property
-    def side(self) -> int | None:
+    def side(self) -> EdgeOrder | None:
         """
         Returns the edge on which the exterior fillet must be applied.
         """
@@ -348,7 +349,7 @@ class Chamfer(SmoothProfile3D):
         """
         The skew_height of the chamfer, measured perpendicular for the skew size to the node.
 
-        :param inner_angle: Inner angle between the two vertices of the node.
+        :param inner_angle: The inner angle between the two edges.
         """
         if self._skew_height is not None:
             return self._skew_height
@@ -368,7 +369,7 @@ class Chamfer(SmoothProfile3D):
         """
         The length of the skew side of the chamfer.
 
-        :param inner_angle: Inner angle between the two vertices of the node.
+        :param inner_angle: The inner angle between the two edges.
         """
         if self._skew_length is not None:
             return self._skew_length
@@ -392,11 +393,11 @@ class Chamfer(SmoothProfile3D):
         return 2
 
     # ------------------------------------------------------------------------------------------------------------------
-    def offset1(self, *, inner_angle: float) -> float:
+    def offset_preceding_edge(self, *, inner_angle: float) -> float:
         """
-        Returns the offset of the smooth profile on the first vertex of the node.
+        Returns the offset of the smooth profile on the preceding edge.
 
-        :param inner_angle: Inner angle between the two vertices of the node.
+        :param inner_angle: The inner angle between the two edges.
         """
         if self._side is None:
             if inner_angle == 180.0:
@@ -407,7 +408,7 @@ class Chamfer(SmoothProfile3D):
 
             return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * inner_angle))
 
-        if self._side == 1:
+        if self._side == EdgeOrder.PRECEDING:
             if inner_angle == 180.0:
                 return 0.0
 
@@ -415,22 +416,22 @@ class Chamfer(SmoothProfile3D):
 
             return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * outer_angle))
 
-        if self._side == 2:
+        if self._side == EdgeOrder.SUCCEEDING:
             return 0.0
 
-        raise ValueError(f'Side must be 1 or 2, got {self._side}.')
+        raise ValueError(f'Unknown side: {self._side}.')
 
     # ------------------------------------------------------------------------------------------------------------------
-    def offset2(self, *, inner_angle: float) -> float:
+    def offset_succeeding_edge(self, *, inner_angle: float) -> float:
         """
-        Returns the offset of the smooth profile on the second vertex of the node.
+        Returns the offset of the smooth profile on the succeeding edge.
 
-        :param inner_angle: Inner angle between the two vertices of the node.
+        :param inner_angle: The inner angle between the two edges.
         """
         if self._side is None:
-            return self.offset1(inner_angle=inner_angle)
+            return self.offset_preceding_edge(inner_angle=inner_angle)
 
-        if self._side == 2:
+        if self._side == EdgeOrder.SUCCEEDING:
             if inner_angle == 180.0:
                 return 0.0
 
@@ -438,10 +439,10 @@ class Chamfer(SmoothProfile3D):
 
             return self.skew_height(inner_angle=inner_angle) / math.cos(math.radians(0.5 * outer_angle))
 
-        if self._side == 1:
+        if self._side == EdgeOrder.PRECEDING:
             return 0.0
 
-        raise ValueError(f'Side must be 1 or 2, got {self._side}.')
+        raise ValueError(f'Unknown side: {self._side}.')
 
     # ------------------------------------------------------------------------------------------------------------------
     def create_smooth_profiles(self, *, params: SmoothProfileParams) -> Tuple[ScadWidget | None, ScadWidget | None]:
@@ -471,8 +472,8 @@ class Chamfer(SmoothProfile3D):
                                         inner_angle=params.inner_angle,
                                         normal_angle=params.normal_angle,
                                         position=params.position,
-                                        edge1_is_extended_by_eps=params.edge1_is_extended_by_eps,
-                                        edge2_is_extended_by_eps=params.edge2_is_extended_by_eps)
+                                        preceding_edge_is_extended_by_eps=params.preceding_edge_is_extended_by_eps,
+                                        succeeding_edge_is_extended_by_eps=params.succeeding_edge_is_extended_by_eps)
 
         return None, widget
 
@@ -491,13 +492,13 @@ class Chamfer(SmoothProfile3D):
             if self._side is None:
                 return self._create_polygon(context, params.inner_angle, params.normal_angle, params.position)
 
-            if self._side == 1:
+            if self._side == EdgeOrder.PRECEDING:
                 return list(reversed(self._create_polygon(context,
                                                           180.0 - params.inner_angle,
                                                           params.normal_angle - 90.0,
                                                           params.position)))
 
-            if self._side == 2:
+            if self._side == EdgeOrder.SUCCEEDING:
                 return list(reversed(self._create_polygon(context,
                                                           180.0 - params.inner_angle,
                                                           params.normal_angle + 90.0,
@@ -522,8 +523,8 @@ class Chamfer(SmoothProfile3D):
         Returns the profile as a polygon.
 
         :param context: The build context.
-        :param inner_angle: The inner angle of the node.
-        :param normal_angle: The normal angle of the node.
+        :param inner_angle: The inner angle between the edges.
+        :param normal_angle: The normal angle of the two edges.
         :param position: The position of the node.
         """
         if self._skew_height is not None:
