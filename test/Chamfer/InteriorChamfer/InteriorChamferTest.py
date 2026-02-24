@@ -9,17 +9,17 @@ from super_scad.scad.Scad import Scad
 from super_scad.scad.ScadWidget import ScadWidget
 from super_scad.transformation.Translate3D import Translate3D
 from super_scad.type import Vector2
+from super_scad_smooth_profile.Rough import Rough
 from super_scad_smooth_profile.SmoothProfile3D import SmoothProfile3D
 from super_scad_smooth_profile.SmoothProfileParams import SmoothProfileParams
 
 from super_scad_smooth_profiles.Chamfer import Chamfer
-from super_scad_smooth_profiles.ExteriorChamferWidget import ExteriorChamferWidget
 from test.ScadTestCase import ScadTestCase
 
 
-class ExteriorChamferTest(ScadTestCase):
+class InteriorChamferTest(ScadTestCase):
     """
-    Testcases for ExteriorChamfer.
+    Testcases for chamfers.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -82,56 +82,35 @@ class ExteriorChamferTest(ScadTestCase):
         """
         Test the convexity of a chamfer.
         """
-        profile = Chamfer(skew_length=5.0, side=1)
+        profile = Chamfer(skew_length=5.0)
         self.assertEqual(profile.convexity, 2)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def test_sizes_side1(self):
+    def test_sizes(self):
         """
-        Test the size of a chamfer on the first side.
+        Test the size of a fillet.
         """
         # Positive radius.
-        profile = Chamfer(skew_length=5.0, side=1)
+        profile = Chamfer(skew_length=5.0)
 
         # Sharp angle.
-        self.assertAlmostEqual(2.7060, profile.offset1(inner_angle=45.0), places=4)
-        self.assertEqual(0.0, profile.offset2(inner_angle=45.0))
+        self.assertAlmostEqual(6.5328, profile.offset1(inner_angle=45.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset2(inner_angle=45.0), places=4)
 
         # Oblique angle.
-        self.assertAlmostEqual(6.5328, profile.offset1(inner_angle=135.0), places=4)
-        self.assertEqual(0.0, profile.offset2(inner_angle=135.0))
+        self.assertAlmostEqual(2.7060, profile.offset1(inner_angle=135.0), places=4)
+        self.assertAlmostEqual(2.7060, profile.offset2(inner_angle=135.0), places=4)
+
+        # Concave corner.
+        self.assertAlmostEqual(6.5328, profile.offset1(inner_angle=315.0), places=4)
+        self.assertAlmostEqual(6.5328, profile.offset2(inner_angle=315.0), places=4)
 
         # Zero angle.
         self.assertEqual(0.0, profile.offset1(inner_angle=180.0))
         self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
 
         # Zero skew length.
-        profile = Chamfer(skew_length=0.0, side=1)
-        self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
-
-    # ------------------------------------------------------------------------------------------------------------------
-    def test_sizes_side2(self):
-        """
-        Test the size of a chamfer on the second side.
-        """
-        # Positive radius.
-        profile = Chamfer(skew_length=5.0, side=2)
-
-        # Sharp angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
-        self.assertAlmostEqual(2.7060, profile.offset2(inner_angle=45.0), places=4)
-
-        # Oblique angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=135.0))
-        self.assertAlmostEqual(6.5328, profile.offset2(inner_angle=135.0), places=4)
-
-        # Zero angle.
-        self.assertEqual(0.0, profile.offset1(inner_angle=180.0))
-        self.assertEqual(0.0, profile.offset2(inner_angle=180.0))
-
-        # Zero skew length.
-        profile = Chamfer(skew_length=0.0, side=2)
+        profile = Chamfer(skew_length=0.0)
         self.assertEqual(0.0, profile.offset1(inner_angle=45.0))
         self.assertEqual(0.0, profile.offset2(inner_angle=315.0))
 
@@ -140,57 +119,68 @@ class ExteriorChamferTest(ScadTestCase):
         """
         Test chamfer given the length of the skew side.
         """
-        profile = Chamfer(skew_length=5.0, side=1)
+        profile = Chamfer(skew_length=5.0)
 
         # Sharp angle.
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * (180.0 - inner_angle))
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
+
+        # Concave corner.
+        self.assertAlmostEqual(profile.skew_height(inner_angle=45.0), profile.skew_height(inner_angle=315.0))
+        self.assertAlmostEqual(profile.skew_length(inner_angle=45.0), profile.skew_length(inner_angle=315.0))
 
         # Oblige angle.
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * (180.0 - inner_angle))
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_length(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
 
     # ------------------------------------------------------------------------------------------------------------------
     def test_skew_height(self):
         """
         Test chamfer given the height of the skew side.
         """
-        profile = Chamfer(skew_height=5.0, side=2)
+        profile = Chamfer(skew_height=5.0)
 
         # Sharp angle.
         inner_angle = 45.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset2(inner_angle=inner_angle), 90.0 + 0.5 * (180.0 - inner_angle))
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
 
         negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
                                                                                        normal_angle=0.0,
                                                                                        position=Vector2.origin))
+        self.assertEqual(negative.__class__.__name__, '_InteriorChamferWidget')
+        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), negative.skew_height)
+        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), negative.skew_length)
 
-        self.assertIsInstance(positive, ExteriorChamferWidget)
-        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), positive.skew_height)
-        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), positive.skew_length)
+        # Concave corner.
+        inner_angle = 315.0
+        self.assertAlmostEqual(profile.skew_height(inner_angle=45.0), profile.skew_height(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.skew_length(inner_angle=45.0), profile.skew_length(inner_angle=inner_angle))
 
         negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
                                                                                        normal_angle=0.0,
                                                                                        position=Vector2.origin))
-        self.assertIsInstance(positive, ExteriorChamferWidget)
+        self.assertEqual(positive.__class__.__name__, '_InteriorChamferWidget')
         self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), positive.skew_height)
         self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), positive.skew_length)
 
@@ -198,39 +188,38 @@ class ExteriorChamferTest(ScadTestCase):
         inner_angle = 135.0
 
         p1 = Vector2(0.5 * profile.skew_length(inner_angle=inner_angle), 0.0)
-        p2 = p1 + Vector2.from_polar(profile.offset2(inner_angle=inner_angle), 90.0 + 0.5 * (180.0 - inner_angle))
+        p2 = p1 + Vector2.from_polar(profile.offset1(inner_angle=inner_angle), 90.0 + 0.5 * inner_angle)
 
         self.assertAlmostEqual(5.0, profile.skew_height(inner_angle=inner_angle))
         self.assertAlmostEqual(0.0, p2.x)
         self.assertAlmostEqual(p2.y, profile.skew_height(inner_angle=inner_angle))
+        self.assertAlmostEqual(profile.offset1(inner_angle=inner_angle), profile.offset2(inner_angle=inner_angle))
 
         negative, positive = profile.create_smooth_profiles(params=SmoothProfileParams(inner_angle=inner_angle,
                                                                                        normal_angle=0.0,
                                                                                        position=Vector2.origin))
-        self.assertIsInstance(positive, ExteriorChamferWidget)
-        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), positive.skew_height)
-        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), positive.skew_length)
+        self.assertEqual(negative.__class__.__name__, '_InteriorChamferWidget')
+        self.assertAlmostEqual(profile.skew_height(inner_angle=inner_angle), negative.skew_height)
+        self.assertAlmostEqual(profile.skew_length(inner_angle=inner_angle), negative.skew_length)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def test_exterior_chamfer_pos(self) -> None:
+    def test_convex(self) -> None:
         """
-        Test an exterior chamfer with positive radius.
+        Test chamfer for convex corners with sharp and oblique angles.
         """
-        context = Context(eps=0.1)
+        context = Context()
         scad = Scad(context=context)
-        points = [Vector2.origin, Vector2(2, 20), Vector2(18, 20), Vector2(20, 0)]
-        body = Polygon(points=points,
-                       extend_by_eps_sides={1})
+        body = Polygon(points=[Vector2(20, 0), Vector2(0, -10), Vector2(-20, 0), Vector2(0, 10)])
 
-        profiles = [Chamfer(skew_length=5.0, side=2),
-                    Chamfer(skew_height=3.0, side=1),
-                    Chamfer(skew_height=3.0, side=2),
-                    Chamfer(skew_length=5.0, side=1)]
+        profiles = [Chamfer(skew_length=5.0),
+                    Chamfer(skew_length=5.0),
+                    Chamfer(skew_length=5.0),
+                    Chamfer(skew_length=5.0)]
 
         body2d = self._build2d(context, body, profiles)
-        body2d = Translate3D(x=-30.0, child=body2d)
+        body2d = Translate3D(x=-20.0, child=body2d)
         body3d = self._build3d(context, body, profiles)
-        body3d = Translate3D(x=10.0, child=body3d)
+        body3d = Translate3D(x=20.0, child=body3d)
         body = Union(children=[body2d, body3d])
 
         path_actual, path_expected = self.paths()
@@ -240,25 +229,23 @@ class ExteriorChamferTest(ScadTestCase):
         self.assertEqual(expected, actual)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def test_exterior_chamfer_zero(self) -> None:
+    def test_concave_sharp(self) -> None:
         """
-        Test an exterior chamfer without chamfer.
+        Test chamfer for concave corners with a sharp angle.
         """
-        context = Context(eps=0.1)
+        context = Context()
         scad = Scad(context=context)
-        points = [Vector2.origin, Vector2(2, 20), Vector2(18, 20), Vector2(20, 0)]
-        body = Polygon(points=points,
-                       extend_by_eps_sides={1})
+        body = Polygon(points=[Vector2(0, 50), Vector2(20, 0), Vector2(0, 40), Vector2(-20, 0)])
 
-        profiles = [Chamfer(skew_length=0.0, side=2),
-                     Chamfer(skew_height=0.0, side=1),
-                     Chamfer(skew_height=0.0, side=2),
-                     Chamfer(skew_length=0.0, side=1)]
+        profiles = [Chamfer(skew_length=5.0),
+                    Rough(),
+                    Chamfer(skew_length=5.0),
+                    Rough()]
 
         body2d = self._build2d(context, body, profiles)
-        body2d = Translate3D(x=-30.0, child=body2d)
+        body2d = Translate3D(x=-20.0, child=body2d)
         body3d = self._build3d(context, body, profiles)
-        body3d = Translate3D(x=10.0, child=body3d)
+        body3d = Translate3D(x=20.0, child=body3d)
         body = Union(children=[body2d, body3d])
 
         path_actual, path_expected = self.paths()
@@ -266,6 +253,65 @@ class ExteriorChamferTest(ScadTestCase):
         actual = path_actual.read_text()
         expected = path_expected.read_text()
         self.assertEqual(expected, actual)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def test_concave_oblique(self) -> None:
+        """
+        Test chamfer for concave corners with an oblique angle.
+        """
+        context = Context()
+        body = Polygon(points=[Vector2(0, 10), Vector2(20, 0), Vector2(0, 5), Vector2(-20, 0)])
+
+        profiles = [Rough(),
+                    Rough(),
+                    Chamfer(skew_length=5.0),
+                    Rough(),
+                    Rough()]
+
+        body2d = self._build2d(context, body, profiles)
+        body2d = Translate3D(x=-20.0, child=body2d)
+        body3d = self._build3d(context, body, profiles)
+        body3d = Translate3D(x=20.0, child=body3d)
+        body = Union(children=[body2d, body3d])
+
+        scad = Scad(context=context)
+        path_actual, path_expected = self.paths()
+        scad.run_super_scad(body, path_actual)
+        actual = path_actual.read_text()
+        expected = path_expected.read_text()
+        self.assertEqual(expected, actual)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def test_barney(self) -> None:
+        """
+        Test fillet node with an inner angle of one hundred and eighty degrees.
+        """
+        context = Context()
+
+        body = Polygon(points=[Vector2.origin, Vector2(0, 20), Vector2(10, 20), Vector2(20, 20), Vector2(20.0, 0.0)])
+
+        inner_angles = body.inner_angles(context)
+        self.assertAlmostEqual(inner_angles[2], 180.0)
+
+        profiles = [Rough(),
+                    Rough(),
+                    Chamfer(skew_length=5.0),
+                    Rough(),
+                    Rough()]
+
+        body2d = self._build2d(context, body, profiles)
+        body2d = Translate3D(x=-30.0, child=body2d)
+        body3d = self._build3d(context, body, profiles)
+        body3d = Translate3D(x=10.0, child=body3d)
+        body = Union(children=[body2d, body3d])
+
+        scad = Scad(context=context)
+        path_actual, path_expected = self.paths()
+        scad.run_super_scad(body, path_actual)
+        actual = path_actual.read_text()
+        expected = path_expected.read_text()
+        self.assertEqual(expected, actual)
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
