@@ -6,7 +6,7 @@ authors = ["P.R. Water <p.r.water@setbased.nl>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/SuperSCAD/SmoothProfiles"
-documentation = "https://superscad.readthedocs.io/"
+documentation = "https://www.superscad.org/"
 keywords = ["OpenSCAD", "SuperSCAD", "Smooth Profile"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -14,20 +14,19 @@ classifiers = [
     "Intended Audience :: Manufacturing",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia :: Graphics :: 3D Modeling",
     "Topic :: Software Development :: Code Generators",
 ]
 
 [tool.poetry.dependencies]
 python = "^3.13"
-super-scad = "^0.11.0"
+super-scad = "^0.11.7"
 super-scad-circle-plus = "^0.9.10"
 super-scad-smooth-profile = "^0.6.3"
 
 [tool.poetry.group.dev.dependencies]
-coverage = "^7.8.0"
+coverage = "^7.13.4"
 
 [build-system]
 requires = ["poetry-core"]
